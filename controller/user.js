@@ -63,7 +63,7 @@ exports.userSignUp = async(req, res)=>{
 exports.userLogin = async(req, res)=>{
     try {
         const {phone, password} = req.body
-        
+
         if(!phone || !password){
             return res.status(400).json({success:false, message:"Enter All Fild"})
         }
@@ -82,8 +82,11 @@ exports.userLogin = async(req, res)=>{
 
         const token = await user.CreateToken()
 
+        let sendUser = user
+        sendUser.password = ""
+
         return res.status(200).cookie("token",token, {httpOnly:true}).json({
-            user,token,success:true
+            user:sendUser,token,success:true
         })
 
 
