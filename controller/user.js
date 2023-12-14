@@ -1,5 +1,6 @@
 const User = require('../model/User')
 const { sendMail } = require('../utils/sendMail')
+const { sendOtp } = require('../utils/sendOtp')
 
 exports.userSignUp = async(req, res)=>{
     try {
@@ -20,14 +21,13 @@ exports.userSignUp = async(req, res)=>{
             return res.status(400).json({success:false, message:"Already Used Phone Number"})
         }
 
-        otp = Math.floor((Math.random()*1000000)+1);
+        otp = Math.floor(Math.random() * 9000) + 1000;
         otp_expired  = new Date(Date.now() + 5 * 60 * 1000)
 
         const phoneObj = {
             phone: phone,
             otp: otp,
-            otp_expired: otp_expired,
-            isVerify: false
+            otp_expired: otp_expired
         }
 
         const newUser = await User.create({
@@ -44,7 +44,8 @@ exports.userSignUp = async(req, res)=>{
         
         const token = await newUser.CreateToken()
 
-        await sendMail(email, "Veryfy Your Account On Swigy", `Your OTP Is ${otp}`)
+        //temp phone = ""
+        sendOtp("+919574478944", `Veryfy Your Account On HUNGRITO Your OTP Is ${otp}`)
 
         return res.status(201).cookie("token",token, {httpOnly:true}).json({
             sendUser,token,success:true
@@ -81,7 +82,7 @@ exports.userOtpVerify = async(req,res)=>{
 
         const user = await User.findById(req.user._id)
 
-        if(user.otp !== otp || user.otp_expired < Date.now()){
+        if(user.phone.otp !== otp || user.phone.otp_expired < Date.now()){
             return res.status(400).json({success: false, message:"OTP DOn't Match And expired"})
         }
 
