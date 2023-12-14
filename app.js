@@ -1,7 +1,7 @@
 require('dotenv').config({"path": "./config/config.env"})
 const express = require('express')
 const app = express()
-const PORT = 8000 || process.env.PORT
+const PORT = process.env.PORT || 6010 
 const cors = require('cors')
 const bodyparser = require("body-parser")
 const user = require('./routes/user')
