@@ -86,14 +86,9 @@ exports.userLogin = async(req, res)=>{
         let sendUser = user
         sendUser.password = ""
 
-        res.setHeader('Set-Cookie', `token=${token}; SameSite=None; Secure`);
-        return res.status(200).json({
+        return res.status(200).cookie("token",token, {httpOnly:true}).json({
             user:sendUser,token,success:true
         })
-        // return res.status(200).cookie("token",token, {httpOnly:true}).json({
-        //     user:sendUser,token,success:true
-        // })
-
 
     } catch (error) {
         console.log('Catch Error:: ', error)
