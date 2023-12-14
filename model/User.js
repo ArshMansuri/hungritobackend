@@ -77,6 +77,6 @@ UserSchema.methods.CreateToken = async function(){
     return jwt.sign({_id: this._id},process.env.JWT)
 }
 
-UserSchema.index({otp_expired: 1}, {expireAfterSeconds: 0})
+UserSchema.index({"phone.otp_expired": 1}, {expireAfterSeconds: 0})
 
 module.exports = mongoose.model("User", UserSchema)
