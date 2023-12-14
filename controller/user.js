@@ -62,6 +62,7 @@ exports.userSignUp = async(req, res)=>{
 
 exports.userLogin = async(req, res)=>{
     try {
+
         const {phone, password} = req.body
 
         if(!phone || !password){
@@ -85,9 +86,13 @@ exports.userLogin = async(req, res)=>{
         let sendUser = user
         sendUser.password = ""
 
-        return res.status(200).cookie("token",token, {httpOnly:true}).json({
+        res.setHeader('Set-Cookie', `token=${token}; SameSite=None; Secure`);
+        return res.status(200).json({
             user:sendUser,token,success:true
         })
+        // return res.status(200).cookie("token",token, {httpOnly:true}).json({
+        //     user:sendUser,token,success:true
+        // })
 
 
     } catch (error) {
