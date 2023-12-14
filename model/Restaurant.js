@@ -1,0 +1,176 @@
+const mongoose = require('mongoose')
+const jwt = require('jsonwebtoken')
+
+const ResSchema = mongoose.Schema({
+    resName:{
+        type: String
+    },
+
+    resAddress:{
+        type: String
+    },
+
+    resCompletAddress:{
+        address:{
+            type: String
+        },
+        country:{
+            type: String
+        },
+        state:{
+            type: String
+        },
+        city:{
+            type: String
+        },
+        pincode:{
+            type: Number
+        },
+        latitude:{
+            type: Number
+        },
+        longitude:{
+            type: Number
+        }
+    },
+
+    resPhone:{
+        phone:{
+            type: String,
+        },
+        otp: Number,
+        otp_expired: Date,
+        isVerify:{
+            type: Boolean,
+            default: false
+        }
+    },
+
+    resEmail:{
+        email:{
+            type: String
+        },
+        otp: Number,
+        otp_expired: Date,
+        isVerify:{
+            type: Boolean,
+            default: false
+        }
+    },
+
+    resOwnerPhone:{
+        phone:{
+            type: String
+        },
+        otp: Number,
+        otp_expired: Date,
+        isVerify:{
+            type: Boolean,
+            default: false
+        }
+    },
+
+    resOwnerName:{
+        type: String
+    },
+
+    resOwnerEmail:{
+        email:{
+            type: String
+        }
+    },
+
+    resType:{
+        type: String
+    },
+
+    resFoodType: Array,
+
+    resTime:[{
+        startTime:String,
+        endTime: String 
+    }],
+
+    resOpenDays: {
+        sun:{
+            type: Boolean,
+            default: false
+        },
+        mon:{
+            type: Boolean,
+            default: true
+        },
+        tues:{
+            type: Boolean,
+            default: true
+        },
+        wed:{
+            type: Boolean,
+            default: true
+        },
+        thurs:{
+            type: Boolean,
+            default: true
+        },
+        fri:{
+            type: Boolean,
+            default: true
+        },
+        sat:{
+            type: Boolean,
+            default: true
+        },
+    },
+
+    resFoodImage:{
+        publicId: String,
+        publicUrl: String
+    },  
+
+    resOffer: {
+        isOffer: {
+            type: Boolean,
+            default: false
+        },
+        offer:{
+            type: String
+        }
+    },
+
+    foodList: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Food"
+    }],
+
+    active:{
+        type: Boolean,
+        default: false
+    },
+    
+    verify:{
+        type: Boolean,
+        default: false
+    },
+
+    password: {
+        type: String
+    },
+
+    creatdAt:{
+        type: Date,
+        default: Date.now
+    }
+
+})
+
+
+ResSchema.methods.CreateToken = async function(){
+    return jwt.sign({_id: this._id},process.env.JWT)
+}
+
+ResSchema.index({resEmail:{
+    otp_expired: 1
+}}, {expireAfterSeconds: 0})
+
+
+module.exports = mongoose.model("Restaurant", ResSchema)
