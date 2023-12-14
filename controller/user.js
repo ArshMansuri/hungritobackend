@@ -86,8 +86,9 @@ exports.userOtpVerify = async(req,res)=>{
             return res.status(400).json({success: false, message:"OTP DOn't Match And expired"})
         }
 
-        user.otp = null
-        user.otp_expired = null
+        user.phone.otp = null
+        user.phone.otp_expired = null
+        user.phone.isVerify = true
         user.verify = true
 
         await user.save()
