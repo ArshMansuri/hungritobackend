@@ -62,9 +62,8 @@ exports.userSignUp = async(req, res)=>{
 
 exports.userLogin = async(req, res)=>{
     try {
-
         const {phone, password} = req.body
-
+        
         if(!phone || !password){
             return res.status(400).json({success:false, message:"Enter All Fild"})
         }
