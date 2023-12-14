@@ -15,7 +15,7 @@ exports.userSignUp = async(req, res)=>{
             return res.status(400).json({success:false, message:"Already Used Email"})
         }
 
-        user = await User.findOne({phone})
+        user = await User.findOne({"phone.phone": phone})
         if(user){
             return res.status(400).json({success:false, message:"Already Used Phone Number"})
         }
@@ -23,14 +23,21 @@ exports.userSignUp = async(req, res)=>{
         otp = Math.floor((Math.random()*1000000)+1);
         otp_expired  = new Date(Date.now() + 5 * 60 * 1000)
 
+        const phoneObj = {
+            phone: phone,
+            otp: otp,
+            otp_expired: otp_expired,
+            isVerify: false
+        }
+
         const newUser = await User.create({
-            username,phone,email,password,otp,otp_expired
+            username,phone:phoneObj,email,password
         })
 
         const sendUser = {
             username: newUser.username,
             email: newUser.email,
-            phone: newUser.phone,
+            phone: newUser.phone.phone,
             verify: newUser.verify
         }
 
