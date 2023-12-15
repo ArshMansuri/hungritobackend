@@ -1,11 +1,11 @@
 const User = require('../model/User')
-const { sendMail } = require('../utils/sendMail')
 const { sendOtp } = require('../utils/sendOtp')
+const cloudinary = require("cloudinary")
 
 exports.userSignUp = async(req, res)=>{
     try {
 
-        const {username,email,phone,password} = req.body
+        const {username,email,phone,password,img} = req.body
 
         if(!username || !email || !phone || !password){
             return res.status(400).json({success:false, message:"Enter All Fild"})
@@ -30,15 +30,29 @@ exports.userSignUp = async(req, res)=>{
             otp_expired: otp_expired
         }
 
-        const newUser = await User.create({
-            username,phone:phoneObj,email,password
-        })
+        let newUser = {}
+        if(img){
+            const myCloud = await cloudinary.v2.uploader.upload(img, {
+                folder: "hungriTo/userAvatar"
+            })
+            profilImg = myCloud.secure_url
+            newUser = await User.create({
+                username,phone:phoneObj,email,password,profilImg
+            })
+        } else {
+            newUser = await User.create({
+                username,phone:phoneObj,email,password
+            })
+        }
+
+
 
         const sendUser = {
             username: newUser.username,
             email: newUser.email,
             phone: newUser.phone.phone,
-            verify: newUser.verify
+            verify: newUser.verify,
+            profilImg: newUser.profilImg
         }
 
         

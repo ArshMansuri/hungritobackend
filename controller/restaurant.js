@@ -361,7 +361,7 @@ exports.resLastSignUp = async(req, res)=>{
     }
 
     const myCloud = await cloudinary.v2.uploader.upload(img, {
-      folder: "foodappp"
+      folder: "hungriTo/restaurant"
     })
 
     const restu = await Restaurant.findById(req.restu._id)
