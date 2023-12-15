@@ -13,7 +13,8 @@ const UserSchema = mongoose.Schema({
       phone:{
         type: Number,
         unique: true,
-        required: true
+        required: true,
+        minlength: [10, "phone number must be 10 characters"]
       },
       otp: Number,
       otp_expired: Date,

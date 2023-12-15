@@ -54,14 +54,11 @@ exports.userSignUp = async(req, res)=>{
             profilImg: newUser.profilImg
         }
 
-        
-        const token = await newUser.CreateToken()
-
         //temp phone = ""
         sendOtp("+919574478944", `Veryfy Your Account On HUNGRITO Your OTP Is ${otp}`)
 
-        return res.status(201).cookie("token",token, {httpOnly:true}).json({
-            user:sendUser,token,success:true
+        return res.status(201).json({
+            user:sendUser,success:true
         })
 
     } catch (error) {
@@ -115,12 +112,20 @@ exports.userLogin = async(req, res)=>{
 exports.userOtpVerify = async(req,res)=>{
     try {
 
-        const {otp} = req.body
+        const {otp, phone} = req.body
         if(!otp){
             return res.status(400).json({message:"Enter OPT"})
         }
 
-        const user = await User.findById(req.user._id)
+        if(!phone){
+            return res.status(400).json({message:"Invalid inputs"})
+        }
+
+        const user = await User.findOne({'phone.phone': phone})
+
+        if(!user || user.phone.isVerify === true){
+            return res.status(400).json({message:"Invalid inputs"})
+        }
 
         if(user.phone.otp !== otp || user.phone.otp_expired < Date.now()){
             return res.status(400).json({success: false, message:"OTP DOn't Match And expired"})
@@ -131,9 +136,10 @@ exports.userOtpVerify = async(req,res)=>{
         user.phone.isVerify = true
         user.verify = true
 
+        const token = await user.CreateToken()
         await user.save()
 
-        return res.status(200).json({success: true, message: "SignUp Successfully"})
+        return res.status(200).cookie("token",token, {httpOnly:true, sameSite: 'None', secure: true }).json({success: true, message: "SignUp Successfully"})
         
     } catch (error) {
         console.log('Catch Error:: ', error)
