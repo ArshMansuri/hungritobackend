@@ -96,7 +96,7 @@ exports.userLogin = async(req, res)=>{
         let sendUser = user
         sendUser.password = ""
 
-        return res.status(200).cookie("token",token, {httpOnly:true, sameSite: 'None', secure: true }).json({
+        return res.status(200).cookie("token",token, {httpOnly:true, expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), sameSite: 'None', secure: true }).json({
             user:sendUser,token,success:true
         })
 
@@ -139,7 +139,7 @@ exports.userOtpVerify = async(req,res)=>{
         const token = await user.CreateToken()
         await user.save()
 
-        return res.status(200).cookie("token",token, {httpOnly:true, sameSite: 'None', secure: true }).json({success: true, message: "SignUp Successfully"})
+        return res.status(200).cookie("token",token, {httpOnly:true,expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) ,  sameSite: 'None', secure: true }).json({success: true, message: "SignUp Successfully"})
         
     } catch (error) {
         console.log('Catch Error:: ', error)
