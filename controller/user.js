@@ -5,18 +5,18 @@ const cloudinary = require("cloudinary")
 exports.userSignUp = async(req, res)=>{
     try {
 
-        const {username,email,phone,password,img} = req.body
+        const {username,phone,password,img} = req.body
 
-        if(!username || !email || !phone || !password){
+        if(!username || !phone || !password){
             return res.status(400).json({success:false, message:"Enter All Fild"})
         }
 
-        let user = await User.findOne({email})
-        if(user){
-            return res.status(400).json({success:false, message:"Already Used Email"})
-        }
+        // let user = await User.findOne({email})
+        // if(user){
+        //     return res.status(400).json({success:false, message:"Already Used Email"})
+        // }
 
-        user = await User.findOne({"phone.phone": phone})
+        let user = await User.findOne({"phone.phone": phone})
         if(user){
             return res.status(400).json({success:false, message:"Already Used Phone Number"})
         }
@@ -37,11 +37,11 @@ exports.userSignUp = async(req, res)=>{
             })
             profilImg = myCloud.secure_url
             newUser = await User.create({
-                username,phone:phoneObj,email,password,profilImg
+                username,phone:phoneObj,password,profilImg
             })
         } else {
             newUser = await User.create({
-                username,phone:phoneObj,email,password
+                username,phone:phoneObj,password
             })
         }
 
@@ -49,7 +49,6 @@ exports.userSignUp = async(req, res)=>{
 
         const sendUser = {
             username: newUser.username,
-            email: newUser.email,
             phone: newUser.phone.phone,
             verify: newUser.verify,
             profilImg: newUser.profilImg
