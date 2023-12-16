@@ -43,7 +43,7 @@ exports.resFirstSignUp = async (req, res) => {
     );
 
     return res.status(201).cookie("token", token, { httpOnly: true }).json({
-      sendUser,
+      restu:sendUser,
       success: true,
     });
   } catch (error) {

@@ -123,6 +123,7 @@ exports.userOtpVerify = async(req,res)=>{
 
         const user = await User.findOne({'phone.phone': phone})
 
+        // phone !== user.phone.phone
         if(!user || user.phone.isVerify === true){
             return res.status(400).json({message:"Invalid inputs"})
         }
@@ -139,7 +140,7 @@ exports.userOtpVerify = async(req,res)=>{
         const token = await user.CreateToken()
         await user.save()
 
-        return res.status(200).cookie("token",token, {httpOnly:true,expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) ,  sameSite: 'None', secure: true }).json({success: true, message: "SignUp Successfully"})
+        return res.status(200).cookie("token",token, {httpOnly:true,expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) ,  sameSite: 'None', secure: true }).json({success: true, message: "SignUp Successfully", token})
         
     } catch (error) {
         console.log('Catch Error:: ', error)
