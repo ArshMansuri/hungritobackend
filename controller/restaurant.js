@@ -31,10 +31,11 @@ exports.resFirstSignUp = async (req, res) => {
       resEmail: {
         email: resEmail,
         isVerify:false
-      }
+      },
+      verify:false
     };
 
-    const token = await newRestu.CreateToken();
+    const restoken = await newRestu.CreateToken();
 
     await sendMail(
       resEmail,
@@ -42,9 +43,10 @@ exports.resFirstSignUp = async (req, res) => {
       `Your OTP Is ${otp}`
     );
 
-    return res.status(201).cookie("token", token, { httpOnly: true }).json({
+    return res.status(201).cookie("restoken", restoken, {httpOnly:true, expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), sameSite: 'None', secure: true }).json({
       restu:sendUser,
       success: true,
+      restoken
     });
   } catch (error) {
     console.log('Catch Error:: ', error)
@@ -57,7 +59,9 @@ exports.resFirstSignUp = async (req, res) => {
 
 exports.resEmailVerify = async (req, res) => {
   try {
+    console.log("callll")
     const { otp } = req.body;
+    console.log(otp)
     if (!otp) {
       return res.status(400).json({ message: "Enter OPT" });
     }
@@ -75,6 +79,7 @@ exports.resEmailVerify = async (req, res) => {
     restu.resEmail.isVerify = true;
 
     await restu.save();
+
 
     return res.status(200).json({
       success: true,
@@ -100,7 +105,11 @@ exports.resPhoneMakeOtp = async (req, res) => {
     sendOtp(phone, msg);
     await restu.save();
 
+    const sendRes = {phone: phone, isVerify: false}
+
+
     return res.status(200).json({
+      restu:sendRes,
       success: true,
       message: `OTP Send On Number ${phone}`,
     });
@@ -129,6 +138,7 @@ exports.resPhoneVerify = async (req, res) => {
     await restu.save();
 
     return res.status(200).json({
+      restu: sendRes,
       success: true,
       message: "Restaurant Phone Number Verify Successfully",
     });
@@ -423,5 +433,13 @@ exports.resLogin = async(req, res)=>{
       success: false,
       message: error.message,
     });
+  }
+}
+
+exports.loadRes = async(req, res) =>{
+  try {
+    
+  } catch (error) {
+    
   }
 }

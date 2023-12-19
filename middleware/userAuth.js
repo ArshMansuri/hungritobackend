@@ -26,12 +26,13 @@ exports.isUserAuth = async (req,res,next)=>{
 exports.isRestuAuth = async(req,res,next)=>{
     try {
         
-        const {token} = req.cookies
-        if(!token){
+        const {restoken} = req.cookies
+        console.log(req.cookies)
+        if(!restoken){
             return res.status(401).json({message: "Login First"})
         }
 
-        const decoded = jwt.verify(token,process.env.JWT)
+        const decoded = jwt.verify(restoken,process.env.JWT)
         req.restu = await Restaurant.findById(decoded._id)
         next()
         
