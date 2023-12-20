@@ -1,14 +1,17 @@
 const express = require('express')
-const { resFirstSignUp, resEmailVerify, resPrimarySignUp, resPhoneMakeOtp, resPhoneVerify, resOwnerPhoneMakeOtp, resOwnerPhoneVerify, resSecondaySignUp, resLastSignUp, resLogin } = require('../controller/restaurant')
+const { resFirstSignUp, resEmailVerify, resPrimarySignUp, resPhoneMakeOtp, resPhoneVerify, resOwnerPhoneMakeOtp, resOwnerPhoneVerify, resSecondaySignUp, resLastSignUp, resLogin, loadRes } = require('../controller/restaurant')
 const { isRestuAuth } = require('../middleware/userAuth')
 const router = express.Router()
 
+router.route('/restaurant/me').get(isRestuAuth, loadRes)
 router.route('/restaurant/fisrt/signup').post(resFirstSignUp)
 router.route('/restaurant/restuemail/verify').post(isRestuAuth, resEmailVerify)
 
 
-router.route('/restaurant/resphone/verify').get(isRestuAuth, resPhoneMakeOtp).post(isRestuAuth, resPhoneVerify)
-router.route('/restaurant/resownerphone/verify').get(isRestuAuth, resOwnerPhoneMakeOtp).post(isRestuAuth, resOwnerPhoneVerify)
+router.route('/restaurant/resphone/makeotp').post(isRestuAuth, resPhoneMakeOtp)
+router.route('/restaurant/resphone/verify').post(isRestuAuth, resPhoneVerify)
+router.route('/restaurant/resownerphone/makeotp').post(isRestuAuth, resOwnerPhoneMakeOtp)
+router.route('/restaurant/resownerphone/verify').post(isRestuAuth, resOwnerPhoneVerify)
 
 
 router.route('/restaurant/primary/signup').post(isRestuAuth, resPrimarySignUp)

@@ -15,7 +15,6 @@ exports.isUserAuth = async (req,res,next)=>{
         next()
 
     } catch (error) {
-        console.log(error);
         return res.status(500).json({
           success: false,
           message: error.message,
@@ -27,7 +26,6 @@ exports.isRestuAuth = async(req,res,next)=>{
     try {
         
         const {restoken} = req.cookies
-        console.log(req.cookies)
         if(!restoken){
             return res.status(401).json({message: "Login First"})
         }

@@ -1,11 +1,11 @@
-const Restaurant = require("../model/Restaurant")
-const { sendMail } = require("../utils/sendMail")
-const { sendOtp } = require("../utils/sendOtp")
-const cloudinary = require("cloudinary")
+const Restaurant = require("../model/Restaurant");
+const { sendMail } = require("../utils/sendMail");
+const { sendOtp } = require("../utils/sendOtp");
+const cloudinary = require("cloudinary");
 
 exports.resFirstSignUp = async (req, res) => {
   try {
-    const { resEmail,} = req.body;
+    const { resEmail } = req.body;
 
     const restu = await Restaurant.findOne({ "resEmail.email": resEmail });
 
@@ -30,9 +30,9 @@ exports.resFirstSignUp = async (req, res) => {
     const sendUser = {
       resEmail: {
         email: resEmail,
-        isVerify:false
+        isVerify: false,
       },
-      verify:false
+      verify: false,
     };
 
     const restoken = await newRestu.CreateToken();
@@ -43,13 +43,21 @@ exports.resFirstSignUp = async (req, res) => {
       `Your OTP Is ${otp}`
     );
 
-    return res.status(201).cookie("restoken", restoken, {httpOnly:true, expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), sameSite: 'None', secure: true }).json({
-      restu:sendUser,
-      success: true,
-      restoken
-    });
+    return res
+      .status(201)
+      .cookie("restoken", restoken, {
+        httpOnly: true,
+        expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        sameSite: "None",
+        secure: true,
+      })
+      .json({
+        restu: sendUser,
+        success: true,
+        restoken,
+      });
   } catch (error) {
-    console.log('Catch Error:: ', error)
+    console.log("Catch Error:: ", error);
     return res.status(500).json({
       success: false,
       message: error.message,
@@ -59,9 +67,9 @@ exports.resFirstSignUp = async (req, res) => {
 
 exports.resEmailVerify = async (req, res) => {
   try {
-    console.log("callll")
+    console.log("callll");
     const { otp } = req.body;
-    console.log(otp)
+    console.log(otp);
     if (!otp) {
       return res.status(400).json({ message: "Enter OPT" });
     }
@@ -80,13 +88,12 @@ exports.resEmailVerify = async (req, res) => {
 
     await restu.save();
 
-
     return res.status(200).json({
       success: true,
       message: "SignUp Successfully",
     });
   } catch (error) {
-    console.log('Catch Error:: ', error)
+    console.log("Catch Error:: ", error);
     return res.status(500).json({
       success: false,
       message: error.message,
@@ -97,24 +104,26 @@ exports.resEmailVerify = async (req, res) => {
 exports.resPhoneMakeOtp = async (req, res) => {
   try {
     const { phone } = req.body;
+
     const restu = await Restaurant.findById(req.restu._id);
     otp = Math.floor(Math.random() * 9000) + 1000;
+    restu.resPhone.phone = phone
     restu.resPhone.otp_expired = new Date(Date.now() + 5 * 60 * 1000);
     restu.resPhone.otp = otp;
+    restu.resPhone.isVerify = false
     const msg = `Your HungriTo OTP Is ${otp}`;
     sendOtp(phone, msg);
     await restu.save();
 
-    const sendRes = {phone: phone, isVerify: false}
-
+    const sendRes = { phone: phone, isVerify: false };
 
     return res.status(200).json({
-      restu:sendRes,
+      restu: sendRes,
       success: true,
       message: `OTP Send On Number ${phone}`,
     });
   } catch (error) {
-    console.log('Catch Error:: ', error)
+    console.log("Catch Error:: ", error);
     return res.status(500).json({
       success: false,
       message: error.message,
@@ -124,7 +133,7 @@ exports.resPhoneMakeOtp = async (req, res) => {
 
 exports.resPhoneVerify = async (req, res) => {
   try {
-    const { otp, phone } = req.body;
+    const { otp } = req.body;
     const restu = await Restaurant.findById(req.restu._id);
 
     if (restu.resPhone.otp !== otp || restu.resPhone.otp_expired < Date.now()) {
@@ -138,12 +147,11 @@ exports.resPhoneVerify = async (req, res) => {
     await restu.save();
 
     return res.status(200).json({
-      restu: sendRes,
       success: true,
       message: "Restaurant Phone Number Verify Successfully",
     });
   } catch (error) {
-    console.log('Catch Error:: ', error)
+    console.log("Catch Error:: ", error);
     return res.status(500).json({
       success: false,
       message: error.message,
@@ -156,18 +164,23 @@ exports.resOwnerPhoneMakeOtp = async (req, res) => {
     const { phone } = req.body;
     const restu = await Restaurant.findById(req.restu._id);
     otp = Math.floor(Math.random() * 9000) + 1000;
+    restu.resOwnerPhone.phone = phone
     restu.resOwnerPhone.otp_expired = new Date(Date.now() + 5 * 60 * 1000);
     restu.resOwnerPhone.otp = otp;
+    restu.resOwnerPhone.isVerify = false
     const msg = `Your HungriTo OTP Is ${otp}`;
     sendOtp(phone, msg);
     await restu.save();
 
+    const sendRes = { phone: phone, isVerify: false };
+
     return res.status(200).json({
+      restu: sendRes,
       success: true,
       message: `OTP Send On Number ${phone}`,
     });
   } catch (error) {
-    console.log('Catch Error:: ', error)
+    console.log("Catch Error:: ", error);
     return res.status(500).json({
       success: false,
       message: error.message,
@@ -198,7 +211,7 @@ exports.resOwnerPhoneVerify = async (req, res) => {
       message: "Restaurant Owner Phone Number Verify Successfully",
     });
   } catch (error) {
-    console.log('Catch Error:: ', error)
+    console.log("Catch Error:: ", error);
     return res.status(500).json({
       success: false,
       message: error.message,
@@ -275,12 +288,12 @@ exports.resPrimarySignUp = async (req, res) => {
     await restu.save();
 
     return res.status(200).json({
+      restu,
       success: true,
       message: "Save Successfully",
     });
-
   } catch (error) {
-    console.log('Catch Error:: ', error)
+    console.log("Catch Error:: ", error);
     return res.status(500).json({
       success: false,
       message: error.message,
@@ -302,7 +315,7 @@ exports.resSecondaySignUp = async (req, res) => {
       fri,
       sat,
     } = req.body;
-    console.log(req.body)
+    console.log(req.body);
     if (
       resType === undefined ||
       resTime === undefined ||
@@ -317,14 +330,13 @@ exports.resSecondaySignUp = async (req, res) => {
       resFoodType.length !== 2 ||
       resFoodType === undefined
     ) {
-      res.status(400)
-      .json({ success: false, message: "Enter All Fild" });
+      res.status(400).json({ success: false, message: "Enter All Fild" });
     }
 
-    const restu = await Restaurant.findById(req.restu._id)
+    const restu = await Restaurant.findById(req.restu._id);
 
-    restu.resType = resType
-    restu.resFoodType = resFoodType
+    restu.resType = resType;
+    restu.resFoodType = resFoodType;
 
     // console.log(resTime)
     // for(let i=0; i<resTime.length; i++){
@@ -334,25 +346,24 @@ exports.resSecondaySignUp = async (req, res) => {
 
     // }
 
-    restu.resTime = resTime
+    restu.resTime = resTime;
 
-    restu.resOpenDays.sun = sun
-    restu.resOpenDays.mon = mon
-    restu.resOpenDays.thurs = thurs
-    restu.resOpenDays.wed = wed
-    restu.resOpenDays.thurs = thurs
-    restu.resOpenDays.fri = fri
-    restu.resOpenDays.sat = sat
+    restu.resOpenDays.sun = sun;
+    restu.resOpenDays.mon = mon;
+    restu.resOpenDays.thurs = thurs;
+    restu.resOpenDays.wed = wed;
+    restu.resOpenDays.thurs = thurs;
+    restu.resOpenDays.fri = fri;
+    restu.resOpenDays.sat = sat;
 
-    await restu.save()
+    await restu.save();
 
     return res.status(200).json({
       success: true,
       message: "Save Successfully",
     });
-
   } catch (error) {
-    console.log('Catch Error:: ', error)
+    console.log("Catch Error:: ", error);
     return res.status(500).json({
       success: false,
       message: error.message,
@@ -360,86 +371,82 @@ exports.resSecondaySignUp = async (req, res) => {
   }
 };
 
-exports.resLastSignUp = async(req, res)=>{
+exports.resLastSignUp = async (req, res) => {
   try {
-    
-    const {img, isOffer, offer} = req.body
+    const { img, isOffer, offer } = req.body;
 
-    if(!img || isOffer === undefined){
-      return res.status(400)
-      .json({ success: false, message: "Enter All Fild" });
+    if (!img || isOffer === undefined) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Enter All Fild" });
     }
 
     const myCloud = await cloudinary.v2.uploader.upload(img, {
-      folder: "hungriTo/restaurant"
-    })
+      folder: "hungriTo/restaurant",
+    });
 
-    const restu = await Restaurant.findById(req.restu._id)
+    const restu = await Restaurant.findById(req.restu._id);
 
-    restu.resFoodImage.publicUrl = myCloud.secure_url
-    restu.resFoodImage.publicId = myCloud.public_id
+    restu.resFoodImage.publicUrl = myCloud.secure_url;
+    restu.resFoodImage.publicId = myCloud.public_id;
 
-    restu.resOffer.isOffer = isOffer
-    if(isOffer){
-      restu.resOffer.offer = offer
+    restu.resOffer.isOffer = isOffer;
+    if (isOffer) {
+      restu.resOffer.offer = offer;
     }
 
-    await restu.save()
+    await restu.save();
     return res.status(200).json({
       success: true,
       message: "Save Successfully",
     });
-
   } catch (error) {
-    console.log("Catch Error" + error)
+    console.log("Catch Error" + error);
     return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
-}
+};
 
-exports.resLogin = async(req, res)=>{
+exports.resLogin = async (req, res) => {
   try {
+    const { phone, pass } = req.body;
 
-    const {phone, pass} = req.body
+    const restu = await Restaurant.findOne({ "resPhone.phone": phone });
 
-    const restu = await Restaurant.findOne({ "resPhone.phone": phone})
-
-    if(!restu){
+    if (!restu) {
       return res.status(400).json({
         success: false,
-        message: "Invalide Details"
-      })
+        message: "Invalide Details",
+      });
     }
 
-    if(restu.isVerify === false || restu.password !== pass){
+    if (restu.isVerify === false || restu.password !== pass) {
       return res.status(400).json({
         success: false,
-        message: "Invalide Details"
-      })
+        message: "Invalide Details",
+      });
     }
 
     const token = await restu.CreateToken();
 
     return res.status(200).cookie("token", token, { httpOnly: true }).json({
       success: true,
-      message: "Login Successfully"
-    })
-    
+      message: "Login Successfully",
+    });
   } catch (error) {
-    console.log("Catch Error" + error)
+    console.log("Catch Error" + error);
     return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
-}
+};
 
-exports.loadRes = async(req, res) =>{
+exports.loadRes = async (req, res) => {
   try {
-    
-  } catch (error) {
-    
-  }
-}
+    const restu = await Restaurant.findById(req.restu._id)
+    return res.state(200).json({success: true, restu})
+  } catch (error) {}
+};
