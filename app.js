@@ -15,7 +15,7 @@ const cloudinary = require("cloudinary")
 
 //================== MiddelWers =====================================
 const corsOptions = {
-    origin: "https://hungrito-food.web.app/",
+    origin: "https://hungrito-food.web.app/*",
     credentials: true, 
 };
   
