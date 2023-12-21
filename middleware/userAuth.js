@@ -24,7 +24,6 @@ exports.isUserAuth = async (req,res,next)=>{
 
 exports.isRestuAuth = async(req,res,next)=>{
     try {
-        
         const {restoken} = req.cookies
         if(!restoken){
             return res.status(401).json({message: "Login First"})

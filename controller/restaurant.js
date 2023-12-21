@@ -2,10 +2,13 @@ const Restaurant = require("../model/Restaurant");
 const { sendMail } = require("../utils/sendMail");
 const { sendOtp } = require("../utils/sendOtp");
 const cloudinary = require("cloudinary");
+const ResType = require('../model/Restype')
+const Category = require('../model/Categories')
 
 exports.resFirstSignUp = async (req, res) => {
   try {
     const { resEmail } = req.body;
+    console.log(resEmail)
 
     const restu = await Restaurant.findOne({ "resEmail.email": resEmail });
 
@@ -17,7 +20,7 @@ exports.resFirstSignUp = async (req, res) => {
     }
 
     otp = Math.floor(Math.random() * 9000) + 1000;
-    otp_expired = new Date(Date.now() + 5 * 60 * 1000);
+    otp_expired = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     const newRestu = await Restaurant.create({
       resEmail: {
@@ -47,7 +50,7 @@ exports.resFirstSignUp = async (req, res) => {
       .status(201)
       .cookie("restoken", restoken, {
         httpOnly: true,
-        expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        expires: new Date(Date.now() + 22 * 60 * 60 * 1000),
         sameSite: "None",
         secure: true,
       })
@@ -67,7 +70,6 @@ exports.resFirstSignUp = async (req, res) => {
 
 exports.resEmailVerify = async (req, res) => {
   try {
-    console.log("callll");
     const { otp } = req.body;
     console.log(otp);
     if (!otp) {
@@ -305,7 +307,7 @@ exports.resSecondaySignUp = async (req, res) => {
   try {
     const {
       resType,
-      resFoodType,
+      resCategory,
       resTime,
       sun,
       mon,
@@ -315,7 +317,6 @@ exports.resSecondaySignUp = async (req, res) => {
       fri,
       sat,
     } = req.body;
-    console.log(req.body);
     if (
       resType === undefined ||
       resTime === undefined ||
@@ -327,8 +328,8 @@ exports.resSecondaySignUp = async (req, res) => {
       thurs === undefined ||
       fri === undefined ||
       sat === undefined ||
-      resFoodType.length !== 2 ||
-      resFoodType === undefined
+      resCategory === undefined ||
+      resCategory.length <= 0 
     ) {
       res.status(400).json({ success: false, message: "Enter All Fild" });
     }
@@ -336,7 +337,7 @@ exports.resSecondaySignUp = async (req, res) => {
     const restu = await Restaurant.findById(req.restu._id);
 
     restu.resType = resType;
-    restu.resFoodType = resFoodType;
+    restu.resCategory = resCategory;
 
     // console.log(resTime)
     // for(let i=0; i<resTime.length; i++){
@@ -345,7 +346,6 @@ exports.resSecondaySignUp = async (req, res) => {
     //   restu.resTime[i].endTime = resTime[i]?.endTime
 
     // }
-
     restu.resTime = resTime;
 
     restu.resOpenDays.sun = sun;
@@ -359,6 +359,7 @@ exports.resSecondaySignUp = async (req, res) => {
     await restu.save();
 
     return res.status(200).json({
+      restu,
       success: true,
       message: "Save Successfully",
     });
@@ -391,14 +392,16 @@ exports.resLastSignUp = async (req, res) => {
     restu.resFoodImage.publicId = myCloud.public_id;
 
     restu.resOffer.isOffer = isOffer;
+    restu.resOffer.offer = ""
     if (isOffer) {
       restu.resOffer.offer = offer;
     }
 
     await restu.save();
     return res.status(200).json({
+      restu,
       success: true,
-      message: "Save Successfully",
+      message: "We Will Contact You After Some Time",
     });
   } catch (error) {
     console.log("Catch Error" + error);
@@ -447,6 +450,38 @@ exports.resLogin = async (req, res) => {
 exports.loadRes = async (req, res) => {
   try {
     const restu = await Restaurant.findById(req.restu._id)
-    return res.state(200).json({success: true, restu})
-  } catch (error) {}
+    return res.status(200).json({success: true, restu})
+  } catch (error) {
+    console.log("Catch Error" + error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
+
+exports.getResType = async(req, res)=>{
+  try {
+    const resTypes = await ResType.find();
+    return res.status(200).json({success: true, resTypes})
+  } catch (error) {
+    console.log("Catch Error" + error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
+exports.getCategories = async(req, res)=>{
+  try {
+    const categories = await Category.find();
+    return res.status(200).json({success: true, categories})
+  } catch (error) {
+    console.log("Catch Error" + error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}

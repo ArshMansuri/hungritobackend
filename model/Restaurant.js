@@ -80,11 +80,15 @@ const ResSchema = mongoose.Schema({
         }
     },
 
-    resType:{
-        type: String
-    },
+    resType:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Restype"
+    }],
 
-    resFoodType: Array,
+    resCategory: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Categories"
+    }],
 
     resTime:[{
         startTime:String,
