@@ -2,13 +2,13 @@ const Restaurant = require("../model/Restaurant");
 const { sendMail } = require("../utils/sendMail");
 const { sendOtp } = require("../utils/sendOtp");
 const cloudinary = require("cloudinary");
-const ResType = require('../model/Restype')
-const Category = require('../model/Categories')
+const ResType = require("../model/Restype");
+const Category = require("../model/Categories");
 
 exports.resFirstSignUp = async (req, res) => {
   try {
     const { resEmail } = req.body;
-    console.log(resEmail)
+    console.log(resEmail);
 
     const restu = await Restaurant.findOne({ "resEmail.email": resEmail });
 
@@ -109,10 +109,10 @@ exports.resPhoneMakeOtp = async (req, res) => {
 
     const restu = await Restaurant.findById(req.restu._id);
     otp = Math.floor(Math.random() * 9000) + 1000;
-    restu.resPhone.phone = phone
+    restu.resPhone.phone = phone;
     restu.resPhone.otp_expired = new Date(Date.now() + 5 * 60 * 1000);
     restu.resPhone.otp = otp;
-    restu.resPhone.isVerify = false
+    restu.resPhone.isVerify = false;
     const msg = `Your HungriTo OTP Is ${otp}`;
     sendOtp(phone, msg);
     await restu.save();
@@ -166,10 +166,10 @@ exports.resOwnerPhoneMakeOtp = async (req, res) => {
     const { phone } = req.body;
     const restu = await Restaurant.findById(req.restu._id);
     otp = Math.floor(Math.random() * 9000) + 1000;
-    restu.resOwnerPhone.phone = phone
+    restu.resOwnerPhone.phone = phone;
     restu.resOwnerPhone.otp_expired = new Date(Date.now() + 5 * 60 * 1000);
     restu.resOwnerPhone.otp = otp;
-    restu.resOwnerPhone.isVerify = false
+    restu.resOwnerPhone.isVerify = false;
     const msg = `Your HungriTo OTP Is ${otp}`;
     sendOtp(phone, msg);
     await restu.save();
@@ -225,6 +225,7 @@ exports.resPrimarySignUp = async (req, res) => {
   try {
     const {
       resName,
+      password,
       resAddress,
       address,
       country,
@@ -240,7 +241,7 @@ exports.resPrimarySignUp = async (req, res) => {
     } = req.body;
 
     if (
-      (!resName || !resAddress || !address,
+      (!resName || !password || !resAddress || !address,
       !country ||
         !state ||
         !city ||
@@ -274,6 +275,7 @@ exports.resPrimarySignUp = async (req, res) => {
     }
 
     restu.resName = resName;
+    restu.password = password;
     restu.resAddress = resAddress;
     restu.resCompletAddress.address = address;
     restu.resCompletAddress.country = country;
@@ -329,7 +331,7 @@ exports.resSecondaySignUp = async (req, res) => {
       fri === undefined ||
       sat === undefined ||
       resCategory === undefined ||
-      resCategory.length <= 0 
+      resCategory.length <= 0
     ) {
       res.status(400).json({ success: false, message: "Enter All Fild" });
     }
@@ -338,16 +340,7 @@ exports.resSecondaySignUp = async (req, res) => {
 
     restu.resType = resType;
     restu.resCategory = resCategory;
-
-    // console.log(resTime)
-    // for(let i=0; i<resTime.length; i++){
-    //   console.log(resTime[i].endTime, "iiiiiiiiiiiiiiiiiii")
-    //   restu.resTime[i].startTime = resTime[i]?.startTime
-    //   restu.resTime[i].endTime = resTime[i]?.endTime
-
-    // }
     restu.resTime = resTime;
-
     restu.resOpenDays.sun = sun;
     restu.resOpenDays.mon = mon;
     restu.resOpenDays.thurs = thurs;
@@ -392,7 +385,7 @@ exports.resLastSignUp = async (req, res) => {
     restu.resFoodImage.publicId = myCloud.public_id;
 
     restu.resOffer.isOffer = isOffer;
-    restu.resOffer.offer = ""
+    restu.resOffer.offer = "";
     if (isOffer) {
       restu.resOffer.offer = offer;
     }
@@ -414,30 +407,54 @@ exports.resLastSignUp = async (req, res) => {
 
 exports.resLogin = async (req, res) => {
   try {
-    const { phone, pass } = req.body;
+    const { email, password } = req.body;
 
-    const restu = await Restaurant.findOne({ "resPhone.phone": phone });
+    if(!email || !password){
+      return res.status(400).json({
+        success: false,
+        message: "Enter all fild",
+      });
+    }
+
+    const restu = await Restaurant.findOne({ "resEmail.email": email, 'isVerify': true}).select('+password')
 
     if (!restu) {
       return res.status(400).json({
         success: false,
-        message: "Invalide Details",
+        message: "Invalide Details a",
       });
     }
 
-    if (restu.isVerify === false || restu.password !== pass) {
+    if (restu.isVerify === false) {
       return res.status(400).json({
         success: false,
         message: "Invalide Details",
       });
     }
 
-    const token = await restu.CreateToken();
+    const isMatch = await restu.matchPassword(password);
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid detail",
+      });
+    }
 
-    return res.status(200).cookie("token", token, { httpOnly: true }).json({
-      success: true,
-      message: "Login Successfully",
-    });
+    const restoken = await restu.CreateToken();
+
+    return res
+      .status(200)
+      .cookie("restoken", restoken, {
+        httpOnly: true,
+        expires: new Date(Date.now() + 22 * 60 * 60 * 1000),
+        sameSite: "None",
+        secure: true,
+      })
+      .json({
+        success: true,
+        message: "Login Successfully",
+        restu
+      });
   } catch (error) {
     console.log("Catch Error" + error);
     return res.status(500).json({
@@ -449,8 +466,8 @@ exports.resLogin = async (req, res) => {
 
 exports.loadRes = async (req, res) => {
   try {
-    const restu = await Restaurant.findById(req.restu._id)
-    return res.status(200).json({success: true, restu})
+    const restu = await Restaurant.findById(req.restu._id);
+    return res.status(200).json({ success: true, restu });
   } catch (error) {
     console.log("Catch Error" + error);
     return res.status(500).json({
@@ -460,10 +477,10 @@ exports.loadRes = async (req, res) => {
   }
 };
 
-exports.getResType = async(req, res)=>{
+exports.getResType = async (req, res) => {
   try {
     const resTypes = await ResType.find();
-    return res.status(200).json({success: true, resTypes})
+    return res.status(200).json({ success: true, resTypes });
   } catch (error) {
     console.log("Catch Error" + error);
     return res.status(500).json({
@@ -471,12 +488,12 @@ exports.getResType = async(req, res)=>{
       message: error.message,
     });
   }
-}
+};
 
-exports.getCategories = async(req, res)=>{
+exports.getCategories = async (req, res) => {
   try {
     const categories = await Category.find();
-    return res.status(200).json({success: true, categories})
+    return res.status(200).json({ success: true, categories });
   } catch (error) {
     console.log("Catch Error" + error);
     return res.status(500).json({
@@ -484,4 +501,4 @@ exports.getCategories = async(req, res)=>{
       message: error.message,
     });
   }
-}
+};

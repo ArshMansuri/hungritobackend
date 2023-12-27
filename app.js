@@ -7,11 +7,9 @@ const bodyparser = require("body-parser")
 const user = require('./routes/user')
 const restaurant = require('./routes/restaurant')
 const food = require('./routes/food')
+const admin = require('./routes/admin')
 const cookiParser = require('cookie-parser')
 const cloudinary = require("cloudinary")
-
-
-
 
 //================== MiddelWers =====================================
 const corsOptions = {
@@ -48,6 +46,7 @@ cloudinary.config({
 app.use('/api/v1', user)
 app.use('/api/v1', restaurant)
 app.use('/api/v1', food)
+app.use('/api/v1', admin)
 
 
 app.get('/', (req,res)=>{

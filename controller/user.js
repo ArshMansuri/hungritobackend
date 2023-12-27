@@ -55,7 +55,7 @@ exports.userSignUp = async(req, res)=>{
         }
 
         //temp phone = ""
-        sendOtp("+919574478944", `Veryfy Your Account On HUNGRITO Your OTP Is ${otp}`)
+        sendOtp("9574478944", `Veryfy Your Account On HUNGRITO Your OTP Is ${otp}`)
 
         return res.status(201).json({
             user:sendUser,success:true

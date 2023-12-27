@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 const jwt = require('jsonwebtoken')
+const bcrypt = require('bcrypt')
 
 const ResSchema = mongoose.Schema({
     resName:{
@@ -151,13 +152,14 @@ const ResSchema = mongoose.Schema({
         default: false
     },
     
-    verify:{
+    isVerify:{
         type: Boolean,
         default: false
     },
 
     password: {
-        type: String
+        type: String,
+        select: true
     },
 
     creatdAt:{
@@ -167,6 +169,15 @@ const ResSchema = mongoose.Schema({
 
 })
 
+ResSchema.pre("save", async function (next){
+    if(this.isModified("password")){
+        this.password = await bcrypt.hash(this.password, 10)
+    }
+})
+
+ResSchema.methods.matchPassword = async function(password){
+    return await bcrypt.compare(password, this.password)
+}
 
 ResSchema.methods.CreateToken = async function(){
     return jwt.sign({_id: this._id},process.env.JWT)
