@@ -21,10 +21,6 @@ exports.createFoodCart = async(req,res)=>{
             publicUrl: myCloud.secure_url
         }
 
-        // if(!foodDescription){
-        //     foodDescription = ""
-        // }
-
         const newFoodObj = {
             foodName,
             foodImage,
@@ -59,8 +55,6 @@ exports.createFoodCart = async(req,res)=>{
 exports.updateFoodCart = async(req, res)=>{
     try {
         const {foodName, img, foodPrice, foodType, foodDescription, isAvilable} = req.body
-        const food = await Food.findById(req.params.id)
-
         if(!foodName && !img && !foodPrice && !foodDescription && isAvilable === undefined){
             return res.status(200).json({
                 success: false,
@@ -68,6 +62,7 @@ exports.updateFoodCart = async(req, res)=>{
             })
         }
 
+        const food = await Food.findById(req.params.id)
         if(!food){
             return res.status(400).json({
                 success: false,
@@ -122,7 +117,6 @@ exports.updateFoodCart = async(req, res)=>{
 
 exports.deleteFoodCart = async(req, res)=>{
   try {
-    console.log(req.params)
     const food = await Food.findById(req.params.id)
 
     if(!food){

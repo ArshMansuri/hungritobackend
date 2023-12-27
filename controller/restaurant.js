@@ -8,10 +8,8 @@ const Category = require("../model/Categories");
 exports.resFirstSignUp = async (req, res) => {
   try {
     const { resEmail } = req.body;
-    console.log(resEmail);
 
     const restu = await Restaurant.findOne({ "resEmail.email": resEmail });
-
     if (restu) {
       return res.status(500).json({
         success: false,
@@ -71,13 +69,11 @@ exports.resFirstSignUp = async (req, res) => {
 exports.resEmailVerify = async (req, res) => {
   try {
     const { otp } = req.body;
-    console.log(otp);
     if (!otp) {
       return res.status(400).json({ message: "Enter OPT" });
     }
 
     const restu = await Restaurant.findById(req.restu._id);
-
     if (restu.resEmail.otp !== otp || restu.resEmail.otp_expired < Date.now()) {
       return res
         .status(400)
@@ -89,11 +85,11 @@ exports.resEmailVerify = async (req, res) => {
     restu.resEmail.isVerify = true;
 
     await restu.save();
-
     return res.status(200).json({
       success: true,
       message: "SignUp Successfully",
     });
+
   } catch (error) {
     console.log("Catch Error:: ", error);
     return res.status(500).json({
@@ -259,7 +255,6 @@ exports.resPrimarySignUp = async (req, res) => {
     }
 
     const restu = await Restaurant.findById(req.restu._id);
-
     if (restu.resPhone.isVerify === false) {
       return res.status(400).json({
         success: false,
@@ -417,7 +412,6 @@ exports.resLogin = async (req, res) => {
     }
 
     const restu = await Restaurant.findOne({ "resEmail.email": email, 'isVerify': true}).select('+password')
-
     if (!restu) {
       return res.status(400).json({
         success: false,

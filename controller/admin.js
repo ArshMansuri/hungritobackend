@@ -14,7 +14,6 @@ exports.adminLogin = async(req,res)=>{
         }
 
         const admin = await Admin.findOne({'email':email}).select("+password")
-
         if(!admin){
             return res.status(400).json({
                 success: false,
