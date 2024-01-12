@@ -5,15 +5,20 @@ const cloudinary = require('cloudinary')
 exports.createFoodCart = async(req,res)=>{
     try {
 
-        const {foodName, img, foodPrice, foodType, foodDescription, isAvilable} = req.body
-
-        if(!foodName || !img || !foodPrice || !foodType){
+        const {foodName, img, foodPrice, foodType, foodDescription, foodCategory, foodWeight, foodOffer} = req.body
+        
+        if(!foodName || !img || !foodPrice || !foodType || !foodDescription || !foodCategory || !foodWeight){
             return res.status(400)
             .json({ success: false, message: "Enter All Fild" });
         }
 
+        if(foodOffer.isOffer && foodOffer.offer === ""){
+            return res.status(400)
+            .json({ success: false, message: "Enter About Offer" });
+        }
+
         const myCloud = await cloudinary.v2.uploader.upload(img, {
-            folder: "foodappp"
+            folder: "hungriTo/food"
         })
 
         const foodImage = {
@@ -26,20 +31,20 @@ exports.createFoodCart = async(req,res)=>{
             foodImage,
             foodPrice,
             foodType,
+            foodCategory,
             foodDescription,
             foodRestaurant: req.restu._id,
-            isAvilable
+            foodWeight,
+            foodOffer
         }
 
         const food = await Food.create(newFoodObj)
-        newFoodObj._id = food._id
 
         const restu = await Restaurant.findById(req.restu._id)
         restu.foodList.unshift(food._id)
         await restu.save()
         return res.status(201).json({
             success: true,
-            newFoodObj,
             message: "Food Cart Create Successfully"
         })
 
@@ -157,4 +162,20 @@ exports.deleteFoodCart = async(req, res)=>{
         message: error.message,
     });
   }
+}
+
+exports.getResFoodList = async(req, res)=>{
+    try {
+        const foods = await Restaurant.findOne({},{'foodList': 1, '_id': 0}).populate('foodList')
+        return res.status(200).json({
+            success: true,
+            foods: foods?.foodList || []
+        })
+    } catch (error) {
+        console.log('Catch Error:: ', error)
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
 }

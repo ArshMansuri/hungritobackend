@@ -33,13 +33,34 @@ const FoodSchema = mongoose.Schema({
         required: true
     },
 
+    foodCategory: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Categories'
+    },
+
     foodDescription:{
         type: String,
         default: ""
     },
 
+    foodOffer: {
+        isOffer: {
+            type: Boolean,
+            default: false
+        },
+        offer:{
+            type: String
+        }
+    },
+
+    foodWeight:{
+        type: String,
+        required: true
+    },
+
     isAvilable:{
-        type: Boolean
+        type: Boolean,
+        default: true
     },
 
     isDelete:{

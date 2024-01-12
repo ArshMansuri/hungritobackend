@@ -11,6 +11,7 @@ const admin = require('./routes/admin')
 const cookiParser = require('cookie-parser')
 const cloudinary = require("cloudinary")
 
+
 //================== MiddelWers =====================================
 const corsOptions = {
     origin: true,
@@ -18,14 +19,13 @@ const corsOptions = {
 };
   
 app.use(cors(corsOptions));  
-app.use(bodyparser.json())
+app.use(bodyparser.json({limit: "50mb"}))
 app.use(express.json({limit: "50mb"}))
 app.use(express.urlencoded({extended: true}))
 app.use(cookiParser())
 
 //================== Data Base Connection ===========================
 const {connectDataBase} = require('./db/conDB')
-const cookieParser = require('cookie-parser')
 connectDataBase()
 
 

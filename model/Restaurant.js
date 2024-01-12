@@ -159,7 +159,7 @@ const ResSchema = mongoose.Schema({
 
     password: {
         type: String,
-        select: true
+        select: false
     },
 
     creatdAt:{
