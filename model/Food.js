@@ -58,7 +58,7 @@ const FoodSchema = mongoose.Schema({
         required: true
     },
 
-    isAvilable:{
+    isAvailable:{
         type: Boolean,
         default: true
     },
