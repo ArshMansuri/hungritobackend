@@ -27,11 +27,22 @@ const ResSchema = mongoose.Schema({
         pincode:{
             type: Number
         },
-        latitude:{
-            type: Number
+        // latitude:{
+        //     type: Number
+        // },
+        // longitude:{
+        //     type: Number
+        // }
+    },
+
+    resLatLong:{
+        type:{
+            type: String,
+            default: 'Point',
         },
-        longitude:{
-            type: Number
+        coordinates: {
+            type: [Number],
+            index: '2dsphere'
         }
     },
 
@@ -169,6 +180,8 @@ const ResSchema = mongoose.Schema({
 
 })
 
+// ResSchema.createIndex({'resLatLong.coordinates': '2dsphere'})
+
 ResSchema.pre("save", async function (next){
     if(this.isModified("password")){
         this.password = await bcrypt.hash(this.password, 10)
@@ -186,6 +199,5 @@ ResSchema.methods.CreateToken = async function(){
 ResSchema.index({resEmail:{
     otp_expired: 1
 }}, {expireAfterSeconds: 0})
-
 
 module.exports = mongoose.model("Restaurant", ResSchema)

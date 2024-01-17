@@ -206,16 +206,16 @@ exports.deleteFoodCart = async(req, res)=>{
     }
 
     food.isDelete = true
-    food.isAvilable = false
+    food.isAvailable = false
     await food.save()
 
-    const restu = await Restaurant.findById(req.restu._id)
+    // const restu = await Restaurant.findById(req.restu._id)
 
-    if(restu.foodList.includes(req.params.id)){
-        const index = restu.foodList.indexOf(req.params.id)
-        restu.foodList.splice(index, 1)
-        await restu.save()
-    }
+    // if(restu.foodList.includes(req.params.id)){
+    //     const index = restu.foodList.indexOf(req.params.id)
+    //     restu.foodList.splice(index, 1)
+    //     await restu.save()
+    // }
 
     return res.status(200).json({
         success: true,
@@ -233,7 +233,7 @@ exports.deleteFoodCart = async(req, res)=>{
 
 exports.getResFoodList = async(req, res)=>{
     try {
-        const foods = await Restaurant.findOne({},{'foodList': 1, '_id': 0}).populate({path: 'foodList', populate: {path: 'foodCategory'}})
+        const foods = await Restaurant.findOne({},{'foodList': 1, '_id': 0}).populate({path: 'foodList', match: {isDelete: false}, populate: {path: 'foodCategory'}})
 
         return res.status(200).json({
             success: true,

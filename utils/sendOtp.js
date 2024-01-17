@@ -10,7 +10,9 @@ exports.sendOtp = async (phone,msg) => {
       from: "+12028663231",
       body: msg,
     })
-    .then((message) => console.log(message.sid));
+    .then((message) => console.log(message.sid)).catch((e)=>{
+      console.log(e)
+    });
 };
 
 

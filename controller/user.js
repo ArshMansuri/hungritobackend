@@ -1,3 +1,4 @@
+const Restaurant = require('../model/Restaurant')
 const User = require('../model/User')
 const { sendOtp } = require('../utils/sendOtp')
 const cloudinary = require("cloudinary")
@@ -147,6 +148,43 @@ exports.loadUser = async(req, res) =>{
         const user = await User.findById(req.user._id)
 
         return res.status(200).json({success: true, user})
+
+    } catch (error) {
+        console.log('Catch Error:: ', error)
+        return res.status(500).json({
+          success: false,
+          message: error.message,
+        });
+    }
+}
+
+exports.getNearestRes = async(req, res)=>{
+    try {
+        const {longitude, latitude} = req.body
+
+        if(!longitude || !latitude){
+            return res.status(404).json({
+                success: false,
+                message: "Don't have your loaction"
+            })
+        }
+        
+        const restus = await Restaurant.find({
+            resLatLong:{
+                $near: {
+                    $geometry: {
+                      type: 'Point',
+                      coordinates: [longitude, latitude],
+                    },
+                    $maxDistance: 15000, // in meters, corresponds to 15 km
+                  },
+            }
+        }).populate("resCategory")
+
+        return res.status(200).json({
+            success: true,
+            restus
+        })
 
     } catch (error) {
         console.log('Catch Error:: ', error)

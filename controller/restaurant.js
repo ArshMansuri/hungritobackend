@@ -277,15 +277,16 @@ exports.resPrimarySignUp = async (req, res) => {
     restu.resCompletAddress.state = state;
     restu.resCompletAddress.city = city;
     restu.resCompletAddress.pincode = pincode;
-    restu.resCompletAddress.latitude = latitude;
-    restu.resCompletAddress.longitude = longitude;
+    // restu.resCompletAddress.latitude = latitude;
+    // restu.resCompletAddress.longitude = longitude;
+    restu.resLatLong.coordinates = [longitude, latitude]
     restu.resPhone.phone = resPhone;
     restu.resOwnerPhone.phone = resOwnerPhone;
     restu.resOwnerEmail.email = resOwnerEmail;
     restu.resOwnerName = resOwnerName;
 
     await restu.save();
-
+    
     return res.status(200).json({
       restu,
       success: true,
