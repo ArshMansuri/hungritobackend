@@ -161,7 +161,7 @@ exports.loadUser = async(req, res) =>{
 exports.getNearestRes = async(req, res)=>{
     try {
         const {longitude, latitude} = req.body
-
+        
         if(!longitude || !latitude){
             return res.status(404).json({
                 success: false,
@@ -186,6 +186,34 @@ exports.getNearestRes = async(req, res)=>{
             restus
         })
 
+    } catch (error) {
+        console.log('Catch Error:: ', error)
+        return res.status(500).json({
+          success: false,
+          message: error.message,
+        });
+    }
+}
+
+exports.getResFood = async(req, res)=>{
+    try {
+
+        const {resId} = req.params
+
+        if(!resId){
+            return res.status(401).json({
+                success: false,
+                message: "Don't have resId"
+            })
+        }
+
+        const foods = await Restaurant.findById(resId).populate({path: 'foodList', match:{isDelete: false}})
+
+        return res.status(200).json({
+            success: true,
+            foods : foods?.foodList || []
+        })
+        
     } catch (error) {
         console.log('Catch Error:: ', error)
         return res.status(500).json({

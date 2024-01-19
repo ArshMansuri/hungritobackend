@@ -1,5 +1,5 @@
 const express = require('express')
-const { userLogin, userSignUp, userOtpVerify, loadUser, getNearestRes } = require('../controller/user')
+const { userLogin, userSignUp, userOtpVerify, loadUser, getNearestRes, getResFood } = require('../controller/user')
 const { isUserAuth } = require('../middleware/userAuth.js')
 const router = express.Router()
 
@@ -9,5 +9,6 @@ router.route('/user/login').post(userLogin)
 router.route('/user/me').get(isUserAuth, loadUser)
 
 router.route('/user/nearestrestu').post(getNearestRes)
+router.route('/user/rest/foods/:resId').get(getResFood)
 
 module.exports = router
