@@ -53,6 +53,37 @@ const UserSchema = mongoose.Schema({
     otp: Number,
     otp_expired: Date,
 
+    cart:{
+        restu: [{
+            resId:{
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Restaurant'
+            },
+            resName: String,
+            foods:[{
+               foodId:{
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Food'
+               },
+               foodName: String,
+               foodPrice: Number,
+               foodQut: Number,
+                subTotal:{
+                    type: Number,
+                    default: 0
+                }
+            }],
+            resSubTotal:{
+                type: Number,
+                default: 0
+            }
+        }],
+        total: {
+            type: Number,
+            default: 0
+        }
+    },
+
     verify:{
         type: Boolean,
         default: false
