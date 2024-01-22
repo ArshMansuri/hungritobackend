@@ -1,5 +1,5 @@
 const express = require('express')
-const { userLogin, userSignUp, userOtpVerify, loadUser, getNearestRes, getResFood, addToCart, removeFromCart, increaseQutOfCartFood, decreaseQutOfCartFood } = require('../controller/user')
+const { userLogin, userSignUp, userOtpVerify, loadUser, getNearestRes, getResFood, addToCart, removeFromCart, increaseQutOfCartFood, decreaseQutOfCartFood, getMyCartDetail } = require('../controller/user')
 const { isUserAuth } = require('../middleware/userAuth.js')
 const router = express.Router()
 
@@ -11,6 +11,7 @@ router.route('/user/me').get(isUserAuth, loadUser)
 router.route('/user/nearestrestu').post(getNearestRes)
 router.route('/user/rest/foods/:resId').get(getResFood)
 
+router.route('/user/my/cart').get(isUserAuth, getMyCartDetail)
 router.route('/user/addtocart').post(isUserAuth, addToCart)
 router.route('/user/removefromcart').put(isUserAuth, removeFromCart)
 router.route('/user/update/cart').put(isUserAuth, increaseQutOfCartFood)

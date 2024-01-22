@@ -255,11 +255,30 @@ exports.getResFood = async (req, res) => {
   }
 };
 
+exports.getMyCartDetail = async (req, res) => {
+  try {
+
+    const user = await User.findById(req.user._id)
+
+    return res.status(200).json({
+      success: true,
+      cart: user?.cart || [],
+    });
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
 exports.addToCart = async (req, res) => {
   try {
-    const { resId, resName, foodId, foodName, foodPrice, foodQut } = req.body;
+    const { resId, resName, foodId, foodName, foodPrice, foodQut, foodImg } = req.body;
 
-    if (!resId || !resName || !foodId || !foodName || !foodPrice || !foodQut) {
+    if (!resId || !resName || !foodId || !foodName || !foodPrice || !foodQut || !foodImg) {
       return res.status(200).json({
         success: false,
         message: "Enter All Details",
@@ -278,6 +297,7 @@ exports.addToCart = async (req, res) => {
       if (foodIndex !== -1) {
         user.cart.restu[restuIndex].foods[foodIndex].foodName = foodName;
         user.cart.restu[restuIndex].foods[foodIndex].foodPrice = foodPrice;
+        user.cart.restu[restuIndex].foods[foodIndex].foodImg = foodImg;
         user.cart.restu[restuIndex].foods[foodIndex].foodQut += foodQut;
         user.cart.restu[restuIndex].foods[foodIndex].subTotal +=
           foodPrice * foodQut;
@@ -288,6 +308,7 @@ exports.addToCart = async (req, res) => {
           foodPrice,
           foodQut,
           subTotal: foodPrice * foodQut,
+          foodImg
         };
         user.cart.restu[restuIndex].foods.push(foodObj);
       }
@@ -299,6 +320,7 @@ exports.addToCart = async (req, res) => {
         foodPrice,
         foodQut,
         subTotal: foodPrice * foodQut,
+        foodImg
       };
       const resObj = {
         resId,

@@ -66,6 +66,7 @@ const UserSchema = mongoose.Schema({
                 ref: 'Food'
                },
                foodName: String,
+               foodImg: String,
                foodPrice: Number,
                foodQut: Number,
                 subTotal:{
