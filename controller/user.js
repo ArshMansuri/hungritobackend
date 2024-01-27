@@ -200,17 +200,75 @@ exports.getNearestRes = async (req, res) => {
       });
     }
 
-    const restus = await Restaurant.find({
-      resLatLong: {
-        $near: {
-          $geometry: {
+    // const restus = await Restaurant.find({
+    //   resLatLong: {
+    //     $near: {
+    //       $geometry: {
+    //         type: "Point",
+    //         coordinates: [longitude, latitude],
+    //       },
+    //       $maxDistance: 15000, 
+    //     },
+    //   },
+    // }).populate("resCategory");
+
+    // const restus = await Restaurant.aggregate([
+    //   {
+    //     $geoNear: {
+    //       near: {
+    //         type: "Point",
+    //         coordinates: [longitude, latitude],
+    //       },
+    //       distanceField: "distance",
+    //       maxDistance: 15000,
+    //       spherical: true,
+    //     },
+    //   },
+    //   {
+    //     $sort: {
+    //       distance: 1, 
+    //     },
+    //   },
+    // ]).lookup({
+    //   from: "resCategories",  
+    //   localField: "resCategory", 
+    //   foreignField: "_id", 
+    //   as: "resCategory",
+    // });
+
+    const restus = await Restaurant.aggregate([
+      {
+        $geoNear: {
+          near: {
             type: "Point",
             coordinates: [longitude, latitude],
           },
-          $maxDistance: 15000, // in meters, corresponds to 15 km
+          distanceField: "distance",
+          maxDistance: 15000,
+          spherical: true,
         },
       },
-    }).populate("resCategory");
+      {
+        $sort: {
+          distance: 1,
+        },
+      },
+      {
+        $lookup: {
+          from: "resCategories",
+          localField: "resCategory",
+          foreignField: "_id",
+          as: "resCategory",
+        },
+      },
+      {
+        $project: {
+          "password": 0,
+        },
+      },
+    ]);
+    
+
 
     return res.status(200).json({
       success: true,
@@ -258,7 +316,8 @@ exports.getResFood = async (req, res) => {
 exports.getMyCartDetail = async (req, res) => {
   try {
 
-    const user = await User.findById(req.user._id)
+    const user = await User.findById(req.user._id).populate({path: "cart.restu.resId",
+    select: "resLatLong.coordinates" })
 
     return res.status(200).json({
       success: true,

@@ -85,6 +85,11 @@ const UserSchema = mongoose.Schema({
         }
     },
 
+    token: {
+        type: Number,
+        default: 0
+    },
+
     verify:{
         type: Boolean,
         default: false

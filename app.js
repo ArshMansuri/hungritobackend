@@ -8,6 +8,8 @@ const user = require('./routes/user')
 const restaurant = require('./routes/restaurant')
 const food = require('./routes/food')
 const admin = require('./routes/admin')
+const payment = require('./routes/payment')
+const oredr = require('./routes/order')
 const cookiParser = require('cookie-parser')
 const cloudinary = require("cloudinary")
 
@@ -44,6 +46,8 @@ cloudinary.config({
 
 //=================== Routers =======================================
 app.use('/api/v1', user)
+app.use('/api/v1', oredr)
+app.use('/api/v1', payment)
 app.use('/api/v1', restaurant)
 app.use('/api/v1', food)
 app.use('/api/v1', admin)
@@ -58,4 +62,3 @@ app.get('/', (req,res)=>{
 app.listen(PORT, ()=>{
     console.log(`App listen on port ${PORT}`)
 })
-

@@ -173,6 +173,22 @@ const ResSchema = mongoose.Schema({
         select: false
     },
 
+    resOrder: [{
+        orderId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Order"
+        }, 
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User"
+        },
+        deliveryBoyId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "DeliveryBoy"
+        },
+        foods: Array
+    }],
+
     creatdAt:{
         type: Date,
         default: Date.now
