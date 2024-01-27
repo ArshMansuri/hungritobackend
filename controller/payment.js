@@ -16,22 +16,13 @@ exports.createUserPayment = async (req, res) => {
         const paymentIntent = await stripe.paymentIntents.create({
             amount: Number(amount) * 100,
             currency: "inr",
-            payment_method_types: ['card'],
-            payment_method: 'pm_card_in',
             description: 'Hungrito online food delivery service',
-            shipping: {
-                name: user?.username || 'Jenny Rosen',
-                address: {
-                  line1: user?.address?.area || '510 Townsend St',
-                  postal_code: '382715',
-                  city: user?.address?.city || 'San Francisco',
-                  state: 'GJ',
-                  country: 'IN',
-                },
+            automatic_payment_methods :{
+                enabled: true
             }
         })
         return res.status(201)
-        .json({ success: true, paymentToken: paymentIntent.client_secret, paymentId: paymentIntent.id, paymentMethodId: paymentIntent.payment_method});
+        .json({ success: true, paymentToken: paymentIntent.client_secret});
 
     } catch (error) {
                 console.log('Catch Error:: ', error)

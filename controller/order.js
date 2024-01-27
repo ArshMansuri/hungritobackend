@@ -88,21 +88,17 @@ exports.createOnlineOrder = async (req, res) => {
       isToken,
       deliveryCharg,
       deliveryAddress,
-      paymentToken,
-      paymentId,
-      paymentMethodId,
+      paymentToken
     } = req.body;
-    console.log(paymentId);
-    console.log(paymentMethodId);
+
     if (
       (isToken === undefined ||
         !deliveryCharg ||
         !deliveryAddress ||
         deliveryAddress.lat === undefined ||
         deliveryAddress.lon === undefined ||
-        !paymentToken,
-      !paymentId,
-      !paymentMethodId)
+        !paymentToken
+      )
     ) {
       return res.status(400).json({
         success: false,
@@ -118,12 +114,6 @@ exports.createOnlineOrder = async (req, res) => {
       });
     }
 
-    const confirmedIntent = await stripe.paymentIntents.confirm(paymentId, {
-      payment_method: 'pm_card_visa',
-      return_url: "http://localhost:3000/food",
-    });
-    console.log(confirmedIntent);
-
     const tempTotal = user.cart.total;
     let tempToken = 0;
     if (isToken) {
@@ -132,6 +122,7 @@ exports.createOnlineOrder = async (req, res) => {
     const orderObj = {
       userId: req.user._id,
       orders: {
+        restu: user.cart.restu,
         restu: user.cart.restu,
         mrp: tempTotal,
         discount: 0,
