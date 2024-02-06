@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken')
 const User = require('../model/User')
 const Restaurant = require('../model/Restaurant')
 const Admin = require('../model/Admin')
+const DelBoy = require('../model/DelBoy')
 
 exports.isUserAuth = async (req,res,next)=>{
     try {
@@ -56,6 +57,26 @@ exports.isAdminAuth = async(req,res,next)=>{
         if(!admin.isActive){
             return res.status(401).json({success: false, message: 'Admin is not active'})
         }
+        next()
+        
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+          success: false,
+          message: error.message,
+        });
+    }
+}
+
+exports.isDbAuth = async(req,res,next)=>{
+    try {
+        const {delboytoken} = req.cookies
+        if(!delboytoken){
+            return res.status(401).json({message: "Login First"})
+        }
+
+        const decoded = jwt.verify(delboytoken,process.env.JWT)
+        req.delBoy = await DelBoy.findById(decoded._id)
         next()
         
     } catch (error) {

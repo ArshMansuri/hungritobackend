@@ -10,6 +10,7 @@ const food = require('./routes/food')
 const admin = require('./routes/admin')
 const payment = require('./routes/payment')
 const oredr = require('./routes/order')
+const delBoy = require('./routes/delBoy')
 const cookiParser = require('cookie-parser')
 const cloudinary = require("cloudinary")
 
@@ -51,6 +52,7 @@ app.use('/api/v1', payment)
 app.use('/api/v1', restaurant)
 app.use('/api/v1', food)
 app.use('/api/v1', admin)
+app.use('/api/v1', delBoy)
 
 
 app.get('/', (req,res)=>{
