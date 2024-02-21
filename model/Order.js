@@ -7,8 +7,14 @@ const OrderSchema = mongoose.Schema({
     },
     deliveryBoyId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'DelBoy'
     },
+
+    isDbAccept: {
+        type: Boolean,
+        default: false
+    },
+
     orders: {
         restu: [{
             resId:{
@@ -33,6 +39,14 @@ const OrderSchema = mongoose.Schema({
             resSubTotal:{
                 type: Number,
                 default: 0
+            },
+            isAccept:{
+                type: Boolean,
+                default: false
+            },
+            resStatus:{
+                type: String,
+                default: "pending"
             }
         }],
         mrp: {

@@ -4,6 +4,8 @@ const { sendOtp } = require("../utils/sendOtp");
 const cloudinary = require("cloudinary");
 const ResType = require("../model/Restype");
 const Category = require("../model/Categories");
+const Order = require("../model/Order");
+
 
 exports.resFirstSignUp = async (req, res) => {
   try {
@@ -497,3 +499,27 @@ exports.getCategories = async (req, res) => {
     });
   }
 };
+
+exports.getResNewOrder = async (req, res) => {
+  try {
+    const orders = await Order.find({"orders.restu.resId": req.restu._id, "orders.restu.resStatus": "pending"}).populate({path: "orders.restu.foods.foodId", select:'foodWeight'}).populate( {path: 'userId', select: 'username'})
+    console.log(orders)
+    if(orders[0]?.orders?.restu?.length > 1){
+      const restuIndex = orders[0]?.orders?.restu?.findIndex(obj=> obj.resId.toString() === req.restu._id.toString())
+      if(restuIndex !== -1){
+        orders[0].orders.restu = orders[0].orders.restu.filter(e=> e.resId.toString() === req.restu._id.toString())
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      orders
+    })
+  } catch (error) {
+    console.log("Catch Error" + error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}

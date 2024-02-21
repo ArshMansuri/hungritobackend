@@ -1,5 +1,5 @@
 const express = require('express')
-const { resFirstSignUp, resEmailVerify, resPrimarySignUp, resPhoneMakeOtp, resPhoneVerify, resOwnerPhoneMakeOtp, resOwnerPhoneVerify, resSecondaySignUp, resLastSignUp, resLogin, loadRes, getResType, getCategories } = require('../controller/restaurant')
+const { resFirstSignUp, resEmailVerify, resPrimarySignUp, resPhoneMakeOtp, resPhoneVerify, resOwnerPhoneMakeOtp, resOwnerPhoneVerify, resSecondaySignUp, resLastSignUp, resLogin, loadRes, getResType, getCategories, getResNewOrder } = require('../controller/restaurant')
 const { isRestuAuth } = require('../middleware/userAuth')
 const router = express.Router()
 
@@ -21,5 +21,7 @@ router.route('/restaurant/last/signup').post(isRestuAuth, resLastSignUp)
 
 router.route('/restaurant/restypes').get(isRestuAuth, getResType)
 router.route('/restaurant/categories').get(isRestuAuth, getCategories)
+
+router.route('/restaurant/neworders').get(isRestuAuth, getResNewOrder)
 
 module.exports = router
