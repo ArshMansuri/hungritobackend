@@ -100,7 +100,17 @@ exports.dbPhoneMakeOtp = async (req, res) => {
   try {
     const { phone } = req.body;
 
-    const delBoy = await DelBoy.findById(req.delBoy._id);
+    let delBoy = await DelBoy.findOne({'dbPhone.phone': phone})
+
+    if(delBoy && delBoy._id.toString() !== req.delBoy._id.toString()){
+      return res.status(400).json({
+        success: false,
+        message: 'Phone Number Already Used'
+      })
+    }
+
+    delBoy = await DelBoy.findById(req.delBoy._id);
+
     otp = Math.floor(Math.random() * 9000) + 1000;
     delBoy.dbPhone.phone = phone;
     delBoy.dbPhone.otp_expired = new Date(Date.now() + 5 * 60 * 1000);
@@ -113,7 +123,7 @@ exports.dbPhoneMakeOtp = async (req, res) => {
     const sendRes = { phone: phone, isVerify: false };
 
     return res.status(200).json({
-      restu: sendRes,
+      delBoy: sendRes,
       success: true,
       message: `OTP Send On Number ${phone}`,
     });
@@ -260,6 +270,65 @@ exports.dbLastSignUp = async (req, res) => {
       message: "We Will Contact You After Some Time",
     });
     
+  } catch (error) {
+    console.log("Catch Error" + error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.dbLogin = async (req, res) => {
+  try {
+    const { phone, password } = req.body;
+
+    if(!phone || !password){
+      return res.status(400).json({
+        success: false,
+        message: "Enter all fild",
+      });
+    }
+
+    const delBoy = await DelBoy.findOne({ "dbPhone.phone": phone, 'dbPhone.isVerify': true}).select('+password')
+    console.log(delBoy)
+    if (!delBoy) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalide Details a",
+      });
+    }
+
+    if (delBoy.isVerify === false) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalide Details b",
+      });
+    }
+
+    const isMatch = await delBoy.matchPassword(password);
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid detail",
+      });
+    }
+
+    const delBoyToken = await delBoy.CreateToken();
+
+    return res
+      .status(200)
+      .cookie("delboytoken", delBoyToken, {
+        httpOnly: true,
+        expires: new Date(Date.now() + 22 * 60 * 60 * 1000),
+        sameSite: "None",
+        secure: true,
+      })
+      .json({
+        success: true,
+        message: "Login Successfully",
+        delBoy
+      });
   } catch (error) {
     console.log("Catch Error" + error);
     return res.status(500).json({

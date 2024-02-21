@@ -41,6 +41,7 @@ const DelBoySchema = mongoose.Schema({
     dbPhone:{
         phone:{
             type: String,
+            unique: true
         },
         otp: Number,
         otp_expired: Date,
