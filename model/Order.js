@@ -104,7 +104,18 @@ const OrderSchema = mongoose.Schema({
 
     status: {
         type: String,
-        default: "pending"
+        default: "new"
+    },
+
+    resLatLong:{
+        type:{
+            type: String,
+            default: 'Point',
+        },
+        coordinates: {
+            type: [Number],
+            index: '2dsphere'
+        }
     },
 
     OrderTokne: {

@@ -1,4 +1,5 @@
 const DelBoy = require("../model/DelBoy");
+const Order = require("../model/Order");
 const { sendMail } = require("../utils/sendMail");
 const { sendOtp } = require("../utils/sendOtp");
 const cloudinary = require("cloudinary");
@@ -100,13 +101,13 @@ exports.dbPhoneMakeOtp = async (req, res) => {
   try {
     const { phone } = req.body;
 
-    let delBoy = await DelBoy.findOne({'dbPhone.phone': phone})
+    let delBoy = await DelBoy.findOne({ "dbPhone.phone": phone });
 
-    if(delBoy && delBoy._id.toString() !== req.delBoy._id.toString()){
+    if (delBoy && delBoy._id.toString() !== req.delBoy._id.toString()) {
       return res.status(400).json({
         success: false,
-        message: 'Phone Number Already Used'
-      })
+        message: "Phone Number Already Used",
+      });
     }
 
     delBoy = await DelBoy.findById(req.delBoy._id);
@@ -212,17 +213,16 @@ exports.dbPrimarySignUp = async (req, res) => {
     delBoy.dbCompletAddress.state = state;
     delBoy.dbCompletAddress.city = city;
     delBoy.dbCompletAddress.pincode = pincode;
-    delBoy.dbLatLong.coordinates = [longitude, latitude]
+    delBoy.dbLatLong.coordinates = [longitude, latitude];
     delBoy.dbPhone.phone = dbPhone;
 
     await delBoy.save();
-    
+
     return res.status(200).json({
       delBoy,
       success: true,
       message: "Save Successfully",
     });
-
   } catch (error) {
     console.log("Catch Error:: ", error);
     return res.status(500).json({
@@ -247,13 +247,18 @@ exports.dbLastSignUp = async (req, res) => {
     const dbImgCloud = await cloudinary.v2.uploader.upload(dbImg, {
       folder: "hungriTo/deliveryBoy",
     });
-    const dbVehicleImgCloud = await cloudinary.v2.uploader.upload(dbVehicleImg, {
-      folder: "hungriTo/dbVehicle",
-    });
-    const dbLicenseImgCloud = await cloudinary.v2.uploader.upload(dbLicenseImg, {
-      folder: "hungriTo/dbLicense",
-    });
-
+    const dbVehicleImgCloud = await cloudinary.v2.uploader.upload(
+      dbVehicleImg,
+      {
+        folder: "hungriTo/dbVehicle",
+      }
+    );
+    const dbLicenseImgCloud = await cloudinary.v2.uploader.upload(
+      dbLicenseImg,
+      {
+        folder: "hungriTo/dbLicense",
+      }
+    );
 
     delBoy.dbImage.publicUrl = dbImgCloud.secure_url;
     delBoy.dbImage.publicId = dbImgCloud.public_id;
@@ -269,7 +274,6 @@ exports.dbLastSignUp = async (req, res) => {
       success: true,
       message: "We Will Contact You After Some Time",
     });
-    
   } catch (error) {
     console.log("Catch Error" + error);
     return res.status(500).json({
@@ -283,15 +287,18 @@ exports.dbLogin = async (req, res) => {
   try {
     const { phone, password } = req.body;
 
-    if(!phone || !password){
+    if (!phone || !password) {
       return res.status(400).json({
         success: false,
         message: "Enter all fild",
       });
     }
 
-    const delBoy = await DelBoy.findOne({ "dbPhone.phone": phone, 'dbPhone.isVerify': true}).select('+password')
-    console.log(delBoy)
+    const delBoy = await DelBoy.findOne({
+      "dbPhone.phone": phone,
+      "dbPhone.isVerify": true,
+    }).select("+password");
+    console.log(delBoy);
     if (!delBoy) {
       return res.status(400).json({
         success: false,
@@ -327,7 +334,7 @@ exports.dbLogin = async (req, res) => {
       .json({
         success: true,
         message: "Login Successfully",
-        delBoy
+        delBoy,
       });
   } catch (error) {
     console.log("Catch Error" + error);
@@ -342,6 +349,104 @@ exports.loadDb = async (req, res) => {
   try {
     const delBoy = await DelBoy.findById(req.delBoy._id);
     return res.status(200).json({ success: true, delBoy });
+  } catch (error) {
+    console.log("Catch Error" + error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.getDbNewOrders = async (req, res) => {
+  try {
+
+    const { longitude, latitude } = req.body;
+
+    if (!longitude || !latitude) {
+      return res.status(404).json({
+        success: false,
+        message: "Don't have your loaction",
+      });
+    }
+
+    const orders = await Order.aggregate([
+      {
+        $geoNear: {
+          near: {
+            type: "Point",
+            coordinates: [longitude, latitude],
+          },
+          distanceField: "distance",
+          maxDistance: 5000,
+          spherical: true,
+        },
+      },
+      {
+        $match: {
+          status: "res accept",
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          pipeline: [
+            {
+              $project: {
+                _id: 0,
+                username: "$username",
+              },
+            },
+          ],
+          as: "user",
+        },
+      },
+      {
+        $lookup: {
+          from: "restaurants",
+          localField: "orders.restu.resId",
+          foreignField: "_id",
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                resName: "$resName",
+                resAddress: "$resAddress",
+                resLatLong: "$resLatLong",
+              },
+            },
+          ],
+          as: "restaurantAddresses",
+        },
+      },
+      {
+        $sort: {
+          distance: 1,
+        },
+      },
+      {
+        $project: {
+          password: 0,
+          userId: 0,
+          "orders.restu": 0,
+          "orders.mrp": 0,
+          "orders.discount": 0,
+          "orders.tax": 0,
+          "orders.token": 0,
+          "orders.status": 0,
+          OrderTokne: 0,
+          creatdAt: 0,
+          // distance: 0,
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      orders,
+    });
   } catch (error) {
     console.log("Catch Error" + error);
     return res.status(500).json({

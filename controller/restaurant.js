@@ -502,7 +502,7 @@ exports.getCategories = async (req, res) => {
 
 exports.getResNewOrder = async (req, res) => {
   try {
-    const orders = await Order.find({"orders.restu.resId": req.restu._id, "orders.restu.resStatus": "pending"}).populate({path: "orders.restu.foods.foodId", select:'foodWeight'}).populate( {path: 'userId', select: 'username'})
+    const orders = await Order.find({"orders.restu.resId": req.restu._id, "orders.restu.resStatus": "pending"}).populate({path: "orders.restu.foods.foodId", select:'foodWeight'}).populate( {path: 'userId', select: 'username'}).sort({ creatdAt: -1 })
     console.log(orders)
     if(orders[0]?.orders?.restu?.length > 1){
       const restuIndex = orders[0]?.orders?.restu?.findIndex(obj=> obj.resId.toString() === req.restu._id.toString())
@@ -515,6 +515,47 @@ exports.getResNewOrder = async (req, res) => {
       success: true,
       orders
     })
+  } catch (error) {
+    console.log("Catch Error" + error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
+exports.resAcceptOrder = async (req, res) => {
+  try {
+    const {ordId} = req.params
+
+    if(!ordId){
+      return res.state(400).json({
+        success: false,
+        message: "Please Give Ord Id"
+      })
+    }
+
+    const order = await Order.findById(ordId)
+    const restu = await Restaurant.findById(req.restu._id)
+    console.log(order)
+    if(!order){
+      return res.state(400).json({
+        success: false,
+        message: "Order not find"
+      })
+    }
+
+    if(order.status === "new"){
+      order.status = "res accept"
+      order.resLatLong.coordinates = restu.resLatLong.coordinates
+      await order.save()
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Order Accepted"
+    })
+
   } catch (error) {
     console.log("Catch Error" + error);
     return res.status(500).json({
