@@ -507,9 +507,7 @@ exports.getResNewOrder = async (req, res) => {
     const orders = await Order.find({
       "orders.restu.resId": req.restu._id,
       "orders.restu.resStatus": "pending",
-      "orders.restu.isAccept": false,
-    },
-    )
+    })
       .populate({ path: "orders.restu.foods.foodId", select: "foodWeight" })
       .populate({ path: "userId", select: "username" })
       .sort({ creatdAt: -1 });
@@ -529,11 +527,6 @@ exports.getResNewOrder = async (req, res) => {
     //       (obj) => obj.resId.toString() === req.restu._id.toString()
     //     );
     //     if (restuIndex !== -1) {
-    //       for(let j=0; j<orders[i].orders?.restu?.length; j++){
-    //         if(orders[i].orders.restu[j].isAccept === false && orders[i].orders.restu[j].resId === req.restu._id){
-    //           sendOrders.push()
-    //         }
-    //       }
     //       orders[i].orders.restu = orders[i].orders.restu.filter(
     //         (e) => e.resId.toString() === req.restu._id.toString()
     //         );
@@ -541,10 +534,23 @@ exports.getResNewOrder = async (req, res) => {
     //   }
     // }
 
+    let sendOrders = []
+    let index = 0
+    for(let i=0; i<orders?.length; i++){
+      for(let j=0; j<orders[i]?.orders?.restu.length; j++){
+        let tempRes = []
+        if(orders[i]?.orders?.restu[j].resId.toString() === req.restu._id.toString() && orders[i]?.orders?.restu[j].isAccept === false){
+          sendOrders[index] = orders[i]
+          sendOrders[index].orders.restu = orders[i]?.orders?.restu[j]
+          index++
+        }
+      }
+    }
+
 
     return res.status(200).json({
       success: true,
-      orders,
+      orders: sendOrders,
     });
   } catch (error) {
     console.log("Catch Error" + error);
