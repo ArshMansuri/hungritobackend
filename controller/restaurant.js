@@ -5,7 +5,7 @@ const cloudinary = require("cloudinary");
 const ResType = require("../model/Restype");
 const Category = require("../model/Categories");
 const Order = require("../model/Order");
-
+const DelBoy = require("../model/DelBoy");
 
 exports.resFirstSignUp = async (req, res) => {
   try {
@@ -91,7 +91,6 @@ exports.resEmailVerify = async (req, res) => {
       success: true,
       message: "SignUp Successfully",
     });
-
   } catch (error) {
     console.log("Catch Error:: ", error);
     return res.status(500).json({
@@ -281,14 +280,14 @@ exports.resPrimarySignUp = async (req, res) => {
     restu.resCompletAddress.pincode = pincode;
     // restu.resCompletAddress.latitude = latitude;
     // restu.resCompletAddress.longitude = longitude;
-    restu.resLatLong.coordinates = [longitude, latitude]
+    restu.resLatLong.coordinates = [longitude, latitude];
     restu.resPhone.phone = resPhone;
     restu.resOwnerPhone.phone = resOwnerPhone;
     restu.resOwnerEmail.email = resOwnerEmail;
     restu.resOwnerName = resOwnerName;
 
     await restu.save();
-    
+
     return res.status(200).json({
       restu,
       success: true,
@@ -407,14 +406,17 @@ exports.resLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if(!email || !password){
+    if (!email || !password) {
       return res.status(400).json({
         success: false,
         message: "Enter all fild",
       });
     }
 
-    const restu = await Restaurant.findOne({ "resEmail.email": email, 'isVerify': true}).select('+password')
+    const restu = await Restaurant.findOne({
+      "resEmail.email": email,
+      isVerify: true,
+    }).select("+password");
     if (!restu) {
       return res.status(400).json({
         success: false,
@@ -450,7 +452,7 @@ exports.resLogin = async (req, res) => {
       .json({
         success: true,
         message: "Login Successfully",
-        restu
+        restu,
       });
   } catch (error) {
     console.log("Catch Error" + error);
@@ -502,19 +504,48 @@ exports.getCategories = async (req, res) => {
 
 exports.getResNewOrder = async (req, res) => {
   try {
-    const orders = await Order.find({"orders.restu.resId": req.restu._id, "orders.restu.resStatus": "pending"}).populate({path: "orders.restu.foods.foodId", select:'foodWeight'}).populate( {path: 'userId', select: 'username'}).sort({ creatdAt: -1 })
-    console.log(orders)
-    if(orders[0]?.orders?.restu?.length > 1){
-      const restuIndex = orders[0]?.orders?.restu?.findIndex(obj=> obj.resId.toString() === req.restu._id.toString())
-      if(restuIndex !== -1){
-        orders[0].orders.restu = orders[0].orders.restu.filter(e=> e.resId.toString() === req.restu._id.toString())
-      }
-    }
+    const orders = await Order.find({
+      "orders.restu.resId": req.restu._id,
+      "orders.restu.resStatus": "pending",
+      "orders.restu.isAccept": false,
+    },
+    )
+      .populate({ path: "orders.restu.foods.foodId", select: "foodWeight" })
+      .populate({ path: "userId", select: "username" })
+      .sort({ creatdAt: -1 });
+
+
+    // const orders = await Order.find({
+    //   "orders.restu.resId": req.restu._id,
+    //   "orders.restu.resStatus": "pending",
+    // })
+    //   .populate({ path: "orders.restu.foods.foodId", select: "foodWeight" })
+    //   .populate({ path: "userId", select: "username" })
+    //   .sort({ creatdAt: -1 });
+
+    // for(let i=0; i<orders?.length; i++){
+    //   if (orders[i]?.orders?.restu?.length > 0) {
+    //     const restuIndex = orders[i]?.orders?.restu?.findIndex(
+    //       (obj) => obj.resId.toString() === req.restu._id.toString()
+    //     );
+    //     if (restuIndex !== -1) {
+    //       for(let j=0; j<orders[i].orders?.restu?.length; j++){
+    //         if(orders[i].orders.restu[j].isAccept === false && orders[i].orders.restu[j].resId === req.restu._id){
+    //           sendOrders.push()
+    //         }
+    //       }
+    //       orders[i].orders.restu = orders[i].orders.restu.filter(
+    //         (e) => e.resId.toString() === req.restu._id.toString()
+    //         );
+    //     }
+    //   }
+    // }
+
 
     return res.status(200).json({
       success: true,
-      orders
-    })
+      orders,
+    });
   } catch (error) {
     console.log("Catch Error" + error);
     return res.status(500).json({
@@ -522,40 +553,80 @@ exports.getResNewOrder = async (req, res) => {
       message: error.message,
     });
   }
-}
+};
 
 exports.resAcceptOrder = async (req, res) => {
   try {
-    const {ordId} = req.params
+    const { ordId } = req.params;
+    console.log("cqall")
 
-    if(!ordId){
+    if (!ordId) {
       return res.state(400).json({
         success: false,
-        message: "Please Give Ord Id"
+        message: "Please Give Ord Id",
+      });
+    }
+
+    const order = await Order.findById(ordId);
+    const restu = await Restaurant.findById(req.restu._id);
+
+    if (!order) {
+      return res.state(400).json({
+        success: false,
+        message: "Order not find",
+      });
+    }
+
+
+    if (order.status === "new") {
+      order.status = "res accept";
+      order.resLatLong.coordinates = restu.resLatLong.coordinates;
+
+      const delBoy = await DelBoy.findOne({
+        'dbCurrentLoc.coordinates': {
+          $near: {
+            $geometry: {
+              type: "Point",
+              coordinates: restu.resLatLong.coordinates,
+            },
+            $maxDistance: 15000
+          },
+        },
+        active: {$eq: true},
+        isAvilable: {$eq: true}
+      })
+      
+      if(delBoy){
+        order.deliveryBoyId = delBoy._id
+        delBoy.isAvilable = false
+        await delBoy.save()
+        // await order.save();
+      } else {
+        return res.status(200).json({
+          success: false,
+          message: "Delivery Boy Not Available",
+        });
+      }
+    }
+
+    const resIndex = order.orders.restu.findIndex(obj=> obj.resId.toString() === restu._id.toString())
+    if(resIndex === -1){
+      return res.status(400).json({
+        success: false,
+        message: "Somthing Went Wrong"
       })
     }
 
-    const order = await Order.findById(ordId)
-    const restu = await Restaurant.findById(req.restu._id)
-    console.log(order)
-    if(!order){
-      return res.state(400).json({
-        success: false,
-        message: "Order not find"
-      })
+    if(order.orders.restu[resIndex].isAccept === false){
+      order.orders.restu[resIndex].isAccept = true
     }
 
-    if(order.status === "new"){
-      order.status = "res accept"
-      order.resLatLong.coordinates = restu.resLatLong.coordinates
-      await order.save()
-    }
+    await order.save()
 
     return res.status(200).json({
       success: true,
-      message: "Order Accepted"
-    })
-
+      message: "Order Accepted",
+    });
   } catch (error) {
     console.log("Catch Error" + error);
     return res.status(500).json({
@@ -563,4 +634,4 @@ exports.resAcceptOrder = async (req, res) => {
       message: error.message,
     });
   }
-}
+};

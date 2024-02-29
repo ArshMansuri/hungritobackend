@@ -82,10 +82,26 @@ const DelBoySchema = mongoose.Schema({
         type: Boolean,
         default: false
     },
+
+    isAvilable: {
+        type: Boolean,
+        default: false
+    },
     
     isVerify:{
         type: Boolean,
         default: false
+    },
+
+    dbCurrentLoc: {
+        type:{
+            type: String,
+            default: 'Point',
+        },
+        coordinates: {
+            type: [Number],
+            index: '2dsphere'
+        }
     },
 
     password: {

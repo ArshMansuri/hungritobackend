@@ -360,9 +360,7 @@ exports.loadDb = async (req, res) => {
 
 exports.getDbNewOrders = async (req, res) => {
   try {
-
     const { longitude, latitude } = req.body;
-
     if (!longitude || !latitude) {
       return res.status(404).json({
         success: false,
@@ -446,6 +444,66 @@ exports.getDbNewOrders = async (req, res) => {
     return res.status(200).json({
       success: true,
       orders,
+    });
+  } catch (error) {
+    console.log("Catch Error" + error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.dbUpdateLiveLocation = async (req, res) => {
+  try {
+    const { longitude, latitude } = req.body;
+
+    if (!longitude || !latitude) {
+      return res.status(400).json({
+        success: false,
+        message: "Don't have lat and long",
+      });
+    }
+
+    const delBoy = await DelBoy.findById(req.delBoy._id);
+
+    if (!delBoy) {
+      return res.status(400).json({
+        success: false,
+        message: "something Went Wrong",
+      });
+    }
+
+    if (delBoy.active === false) {
+      return res.status(400).json({
+        success: false,
+        message: "Db not active",
+      });
+    }
+
+    if (delBoy?.dbCurrentLoc?.coordinates?.length !== 2) {
+      delBoy.dbCurrentLoc.coordinates = [longitude, latitude];
+      await delBoy.save();
+      return res.status(200).json({
+        success: true,
+        message: "Location Upadeted",
+      });
+    } else if (
+      delBoy?.dbCurrentLoc?.coordinates[0] === longitude &&
+      delBoy?.dbCurrentLoc?.coordinates[1] === latitude
+    ) {
+      return res.status(200).json({
+        success: false,
+        message: "No Need To Update Location",
+      });
+    }
+
+    delBoy.dbCurrentLoc.coordinates = [longitude, latitude];
+    await delBoy.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Location Upadeted",
     });
   } catch (error) {
     console.log("Catch Error" + error);
