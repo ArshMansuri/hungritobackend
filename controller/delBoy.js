@@ -360,86 +360,91 @@ exports.loadDb = async (req, res) => {
 
 exports.getDbNewOrders = async (req, res) => {
   try {
-    const { longitude, latitude } = req.body;
-    if (!longitude || !latitude) {
-      return res.status(404).json({
-        success: false,
-        message: "Don't have your loaction",
-      });
-    }
 
-    const orders = await Order.aggregate([
-      {
-        $geoNear: {
-          near: {
-            type: "Point",
-            coordinates: [longitude, latitude],
-          },
-          distanceField: "distance",
-          maxDistance: 5000,
-          spherical: true,
-        },
-      },
-      {
-        $match: {
-          status: "res accept",
-        },
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "userId",
-          foreignField: "_id",
-          pipeline: [
-            {
-              $project: {
-                _id: 0,
-                username: "$username",
-              },
-            },
-          ],
-          as: "user",
-        },
-      },
-      {
-        $lookup: {
-          from: "restaurants",
-          localField: "orders.restu.resId",
-          foreignField: "_id",
-          pipeline: [
-            {
-              $project: {
-                _id: 1,
-                resName: "$resName",
-                resAddress: "$resAddress",
-                resLatLong: "$resLatLong",
-              },
-            },
-          ],
-          as: "restaurantAddresses",
-        },
-      },
-      {
-        $sort: {
-          distance: 1,
-        },
-      },
-      {
-        $project: {
-          password: 0,
-          userId: 0,
-          "orders.restu": 0,
-          "orders.mrp": 0,
-          "orders.discount": 0,
-          "orders.tax": 0,
-          "orders.token": 0,
-          "orders.status": 0,
-          OrderTokne: 0,
-          creatdAt: 0,
-          // distance: 0,
-        },
-      },
-    ]);
+    // const orders = await Order.aggregate([
+    //   {
+    //     $geoNear: {
+    //       near: {
+    //         type: "Point",
+    //         coordinates: [longitude, latitude],
+    //       },
+    //       distanceField: "distance",
+    //       maxDistance: 5000,
+    //       spherical: true,
+    //     },
+    //   },
+    //   {
+    //     $match: {
+    //       status: "res accept",
+    //     },
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "users",
+    //       localField: "userId",
+    //       foreignField: "_id",
+    //       pipeline: [
+    //         {
+    //           $project: {
+    //             _id: 0,
+    //             username: "$username",
+    //           },
+    //         },
+    //       ],
+    //       as: "user",
+    //     },
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "restaurants",
+    //       localField: "orders.restu.resId",
+    //       foreignField: "_id",
+    //       pipeline: [
+    //         {
+    //           $project: {
+    //             _id: 1,
+    //             resName: "$resName",
+    //             resAddress: "$resAddress",
+    //             resLatLong: "$resLatLong",
+    //           },
+    //         },
+    //       ],
+    //       as: "restaurantAddresses",
+    //     },
+    //   },
+    //   {
+    //     $sort: {
+    //       distance: 1,
+    //     },
+    //   },
+    //   {
+    //     $project: {
+    //       password: 0,
+    //       userId: 0,
+    //       "orders.restu": 0,
+    //       "orders.mrp": 0,
+    //       "orders.discount": 0,
+    //       "orders.tax": 0,
+    //       "orders.token": 0,
+    //       "orders.status": 0,
+    //       OrderTokne: 0,
+    //       creatdAt: 0,
+    //       // distance: 0,
+    //     },
+    //   },
+    // ]);
+
+
+    const orders = await Order.findOne({
+      deliveryBoyId: req.delBoy._id,
+      isDbAccept: false
+    }).populate({
+      path: "userId",
+      select: 'username'
+    }).populate({
+      path: 'orders.restu.resId',
+      select: 'resName resAddress resLatLong'
+    }).select("-password ")
 
     return res.status(200).json({
       success: true,

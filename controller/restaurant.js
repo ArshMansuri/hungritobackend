@@ -538,7 +538,6 @@ exports.getResNewOrder = async (req, res) => {
     let index = 0
     for(let i=0; i<orders?.length; i++){
       for(let j=0; j<orders[i]?.orders?.restu.length; j++){
-        let tempRes = []
         if(orders[i]?.orders?.restu[j].resId.toString() === req.restu._id.toString() && orders[i]?.orders?.restu[j].isAccept === false){
           sendOrders[index] = orders[i]
           sendOrders[index].orders.restu = orders[i]?.orders?.restu[j]

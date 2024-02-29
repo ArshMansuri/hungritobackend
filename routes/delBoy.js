@@ -17,7 +17,7 @@ router.route('/delBoy/last/signup').post(isDbAuth, dbLastSignUp)
 
 router.route('/delBoy/update/location').post(isDbAuth, dbUpdateLiveLocation)
 
-router.route('/delBoy/neworders').post(isDbAuth, getDbNewOrders)
+router.route('/delBoy/neworders').get(isDbAuth, getDbNewOrders)
 
 
 module.exports = router
