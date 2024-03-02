@@ -564,3 +564,67 @@ exports.decreaseQutOfCartFood = async(req, res) => {
     });
   }
 }
+
+exports.addOrRemoveFoodInSave = async(req, res) => {
+  try {
+
+    const {foodId} = req.params
+
+    if(!foodId){
+      return res.status(400).json({
+        success: false,
+        message: "Don't have foodid"
+      })
+    }
+
+    const user = await User.findById(req.user._id).select("saveFood")
+    const food = await Food.findById(foodId)
+
+    if(!food){
+      return res.status(400).json({
+        success: false,
+        message: "Food Not Found"
+      })
+    }
+
+    const index = user.saveFood.indexOf(foodId)
+    if(index !== -1){
+      user.saveFood.splice(index,1)
+    } else {
+      user.saveFood.unshift(foodId)
+    }
+
+    await user.save()
+
+    return res.status(200).json({
+      success: true,
+      message: "Food Save Successfully",
+    })
+    
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
+exports.getMySaveFoods = async(req, res) => {
+  try {
+
+    const foods = await User.findById(req.user._id).populate({path: "saveFood", populate: {path: "foodRestaurant", select: "_id resName"}}).select("saveFood")
+
+    return res.status(200).json({
+      success: true,
+      foods:foods.saveFood
+    })
+
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}

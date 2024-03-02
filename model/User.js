@@ -85,6 +85,11 @@ const UserSchema = mongoose.Schema({
         }
     },
 
+    saveFood: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Food"
+    }],
+
     token: {
         type: Number,
         default: 0
