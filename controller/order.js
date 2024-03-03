@@ -73,7 +73,7 @@ exports.createCodOrder = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: "Order Place Successfully",
-      order,
+      orderId: order._id,
     });
   } catch (error) {
     console.log("Catch Error:: ", error);

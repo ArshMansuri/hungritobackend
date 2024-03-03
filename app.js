@@ -34,6 +34,7 @@ app.use(cookiParser())
 
 //================== Data Base Connection ===========================
 const {connectDataBase} = require('./db/conDB')
+const { resNewOrderAdd } = require('./utils/socketHendlars/restaurant')
 connectDataBase()
 
 
@@ -77,27 +78,28 @@ function updateSocketId(map, userId, socketId) {
             map.delete(userId);
         }   
     }
-    map.set(userId, socketId);
+    map.set(userId.toString(), socketId);
 }
 
 io.on('connection', (socket)=>{
-    console.log(`User connected: ${socket.id}`);
     socket.on('user-online', ({userId})=>{
-        console.log(userId, socket.id)
-        // onlineCustomers.set(userId, socket.id);
+        console.log(userId, socket.id, "user")
         updateSocketId(onlineCustomers, userId, socket.id);
     })
 
     socket.on('deliveryBoy-online', ({dbId})=>{
-        console.log(dbId, socket.id)
-        // onlineDeliveryBoy.set(dbId, socket.id);
+        console.log(dbId, socket.id, "del")
         updateSocketId(onlineDeliveryBoy, dbId, socket.id);
     })
 
     socket.on('restaurant-online', ({resId})=>{
-        console.log(resId, socket.id)
-        // onlineRestaurant.set(resId, socket.id);
+        console.log(resId, socket.id, "res")
         updateSocketId(onlineRestaurant, resId, socket.id);
+    })
+
+    socket.on("new-order-from-user", ({orderId})=>{
+        console.log(orderId, "   order id")
+        resNewOrderAdd(io, orderId, onlineRestaurant)
     })
 
 
@@ -120,6 +122,7 @@ io.on('connection', (socket)=>{
             }
         });
     });
+
 })
 
 
@@ -128,3 +131,5 @@ io.on('connection', (socket)=>{
 server.listen(PORT, ()=>{
     console.log(`App listen on port ${PORT}`)
 })
+
+module.exports = {io};
