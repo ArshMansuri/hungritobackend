@@ -563,7 +563,6 @@ exports.getResNewOrder = async (req, res) => {
 exports.resAcceptOrder = async (req, res) => {
   try {
     const { ordId } = req.params;
-    console.log("cqall")
 
     if (!ordId) {
       return res.state(400).json({
@@ -582,8 +581,9 @@ exports.resAcceptOrder = async (req, res) => {
       });
     }
 
-
+    let sendDelBoyLiveOrd = false
     if (order.status === "new") {
+      sendDelBoyLiveOrd = true
       order.status = "res accept";
       order.resLatLong.coordinates = restu.resLatLong.coordinates;
 
@@ -600,14 +600,14 @@ exports.resAcceptOrder = async (req, res) => {
         active: {$eq: true},
         isAvilable: {$eq: true}
       })
-      
-      if(delBoy){
+
+      if(delBoy && delBoy?.isAvilable === true && delBoy?.active === true){
         order.deliveryBoyId = delBoy._id
         delBoy.isAvilable = false
         await delBoy.save()
         // await order.save();
       } else {
-        return res.status(200).json({
+        return res.status(401).json({
           success: false,
           message: "Delivery Boy Not Available",
         });
@@ -631,6 +631,7 @@ exports.resAcceptOrder = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Order Accepted",
+      sendDelBoyLiveOrd
     });
   } catch (error) {
     console.log("Catch Error" + error);

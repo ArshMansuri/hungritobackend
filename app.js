@@ -35,6 +35,7 @@ app.use(cookiParser())
 //================== Data Base Connection ===========================
 const {connectDataBase} = require('./db/conDB')
 const { resNewOrderAdd } = require('./utils/socketHendlars/restaurant')
+const { dbNewOrderAdd } = require('./utils/socketHendlars/delBoy')
 connectDataBase()
 
 
@@ -98,8 +99,11 @@ io.on('connection', (socket)=>{
     })
 
     socket.on("new-order-from-user", ({orderId})=>{
-        console.log(orderId, "   order id")
         resNewOrderAdd(io, orderId, onlineRestaurant)
+    })
+
+    socket.on("new-order-from-restu", ({ordId})=>{
+        dbNewOrderAdd(io, ordId, onlineDeliveryBoy)
     })
 
 
@@ -124,6 +128,17 @@ io.on('connection', (socket)=>{
     });
 
 })
+
+// async function abc(){
+//     try {
+//     const order = await Order.deleteMany()
+
+//     } catch (error) {
+//         console.log(error)
+//     }
+// }
+
+// abc()
 
 
 

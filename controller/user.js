@@ -3,6 +3,7 @@ const User = require("../model/User");
 const Food = require("../model/Food");
 const { sendOtp } = require("../utils/sendOtp");
 const cloudinary = require("cloudinary");
+const Order = require("../model/Order")
 
 exports.userSignUp = async (req, res) => {
   try {
@@ -627,4 +628,24 @@ exports.getMySaveFoods = async(req, res) => {
       message: error.message,
     });
   }
+}
+
+exports.getMyOrderHistory = async(req, res) => {
+  try {
+    
+    const orders = await Order.find({"userId": req.user._id}).populate({path: "orders.restu.foods.foodId", select: "foodWeight"}).sort({creatdAt: -1})
+
+    return res.status(200).json({
+      success: true,
+      orders
+    })
+
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+
 }
