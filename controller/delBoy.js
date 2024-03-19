@@ -518,3 +518,79 @@ exports.dbUpdateLiveLocation = async (req, res) => {
     });
   }
 };
+
+exports.dbAcceptOrder = async (req, res) => {
+  try {
+
+    const { ordId } = req.params;
+
+    if (!ordId) {
+      return res.state(400).json({
+        success: false,
+        message: "Please Give Ord Id",
+      });
+    }
+
+    const order = await Order.findById(ordId)
+
+    if(!order){
+      return res.status(200).json({
+        success: false,
+        message: "Order Not Found"
+      })
+    }
+
+    if(order?.isDbAccept === true){
+      return res.status(200).json({
+        success: false,
+        message: "Order Already Accepted"
+      })
+    }
+
+    order.isDbAccept = true
+    order.status = "on way"
+
+    await order.save()
+
+    return res.status(200).json({
+      success:  true,
+      message: "Order Accepted"
+    })
+
+  } catch (error) {
+    console.log("Catch Error" + error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
+exports.dbMyActiveOrder = async (req, res) => {
+  try {
+
+    const order = await Order.findOne({deliveryBoyId: req.delBoy._id, status: "on way"}).populate({
+      path: 'orders.restu.resId',
+      select: 'resName resAddress resLatLong'
+    })
+
+    if(!order){
+      return res.status(400).json({
+        success: false,
+        message: "Order Not Found"
+      })
+    }
+
+    return res.status(200).json({
+      success: true,
+      order
+    })
+
+  } catch (error) {
+    console.log("Catch Error" + error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}

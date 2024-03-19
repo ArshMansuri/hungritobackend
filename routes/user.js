@@ -1,5 +1,5 @@
 const express = require('express')
-const { userLogin, userSignUp, userOtpVerify, loadUser, getNearestRes, getResFood, addToCart, removeFromCart, increaseQutOfCartFood, decreaseQutOfCartFood, getMyCartDetail, addOrRemoveFoodInSave, getMySaveFoods, getMyOrderHistory,  } = require('../controller/user')
+const { userLogin, userSignUp, userOtpVerify, loadUser, getNearestRes, getResFood, addToCart, removeFromCart, increaseQutOfCartFood, decreaseQutOfCartFood, getMyCartDetail, addOrRemoveFoodInSave, getMySaveFoods, getMyOrderHistory, getMyActiveOrder,  } = require('../controller/user')
 const { isUserAuth } = require('../middleware/userAuth.js')
 const router = express.Router()
 
@@ -21,5 +21,6 @@ router.route('/user/remove/cart').put(isUserAuth, decreaseQutOfCartFood)
 router.route('/user/addoremove/save/:foodId').get(isUserAuth, addOrRemoveFoodInSave)
 router.route('/user/my/save').get(isUserAuth, getMySaveFoods)
 router.route('/user/my/order/history').get(isUserAuth, getMyOrderHistory)
+router.route('/user/my/order/active').get(isUserAuth, getMyActiveOrder)
 
 module.exports = router

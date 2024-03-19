@@ -3,7 +3,7 @@ const User = require("../model/User");
 const Food = require("../model/Food");
 const { sendOtp } = require("../utils/sendOtp");
 const cloudinary = require("cloudinary");
-const Order = require("../model/Order")
+const Order = require("../model/Order");
 
 exports.userSignUp = async (req, res) => {
   try {
@@ -208,7 +208,7 @@ exports.getNearestRes = async (req, res) => {
     //         type: "Point",
     //         coordinates: [longitude, latitude],
     //       },
-    //       $maxDistance: 15000, 
+    //       $maxDistance: 15000,
     //     },
     //   },
     // }).populate("resCategory");
@@ -227,13 +227,13 @@ exports.getNearestRes = async (req, res) => {
     //   },
     //   {
     //     $sort: {
-    //       distance: 1, 
+    //       distance: 1,
     //     },
     //   },
     // ]).lookup({
-    //   from: "resCategories",  
-    //   localField: "resCategory", 
-    //   foreignField: "_id", 
+    //   from: "resCategories",
+    //   localField: "resCategory",
+    //   foreignField: "_id",
     //   as: "resCategory",
     // });
 
@@ -264,12 +264,10 @@ exports.getNearestRes = async (req, res) => {
       },
       {
         $project: {
-          "password": 0,
+          password: 0,
         },
       },
     ]);
-    
-
 
     return res.status(200).json({
       success: true,
@@ -303,7 +301,7 @@ exports.getResFood = async (req, res) => {
     return res.status(200).json({
       success: true,
       foods: foods?.foodList || [],
-      resName: foods?.resName || ""
+      resName: foods?.resName || "",
     });
   } catch (error) {
     console.log("Catch Error:: ", error);
@@ -316,9 +314,10 @@ exports.getResFood = async (req, res) => {
 
 exports.getMyCartDetail = async (req, res) => {
   try {
-
-    const user = await User.findById(req.user._id).populate({path: "cart.restu.resId",
-    select: "resLatLong.coordinates" })
+    const user = await User.findById(req.user._id).populate({
+      path: "cart.restu.resId",
+      select: "resLatLong.coordinates",
+    });
 
     return res.status(200).json({
       success: true,
@@ -333,12 +332,20 @@ exports.getMyCartDetail = async (req, res) => {
   }
 };
 
-
 exports.addToCart = async (req, res) => {
   try {
-    const { resId, resName, foodId, foodName, foodPrice, foodQut, foodImg } = req.body;
+    const { resId, resName, foodId, foodName, foodPrice, foodQut, foodImg } =
+      req.body;
 
-    if (!resId || !resName || !foodId || !foodName || !foodPrice || !foodQut || !foodImg) {
+    if (
+      !resId ||
+      !resName ||
+      !foodId ||
+      !foodName ||
+      !foodPrice ||
+      !foodQut ||
+      !foodImg
+    ) {
       return res.status(200).json({
         success: false,
         message: "Enter All Details",
@@ -368,7 +375,7 @@ exports.addToCart = async (req, res) => {
           foodPrice,
           foodQut,
           subTotal: foodPrice * foodQut,
-          foodImg
+          foodImg,
         };
         user.cart.restu[restuIndex].foods.push(foodObj);
       }
@@ -380,7 +387,7 @@ exports.addToCart = async (req, res) => {
         foodPrice,
         foodQut,
         subTotal: foodPrice * foodQut,
-        foodImg
+        foodImg,
       };
       const resObj = {
         resId,
@@ -391,14 +398,14 @@ exports.addToCart = async (req, res) => {
       user.cart.restu.push(resObj);
     }
 
-    user.cart.total += (foodPrice * foodQut)
+    user.cart.total += foodPrice * foodQut;
 
     await user.save();
 
     res.status(200).json({
       success: true,
       cart: user.cart,
-      message: "Add In Card Successfully"
+      message: "Add In Card Successfully",
     });
   } catch (error) {
     console.log("Catch Error:: ", error);
@@ -409,45 +416,45 @@ exports.addToCart = async (req, res) => {
   }
 };
 
-exports.removeFromCart = async(req, res) =>{
+exports.removeFromCart = async (req, res) => {
   try {
-    const {resId, foodId} = req.body
+    const { resId, foodId } = req.body;
 
-    if(!resId || !foodId){
+    if (!resId || !foodId) {
       return res.status(200).json({
         success: false,
         message: "Enter All Details",
       });
     }
 
-    const user = await User.findById(req.user._id)
+    const user = await User.findById(req.user._id);
     const restuIndex = user.cart.restu.findIndex(
       (obj) => obj.resId.toString() === resId
     );
 
-    if(restuIndex !== -1){
+    if (restuIndex !== -1) {
       const foodIndex = user.cart.restu[restuIndex].foods.findIndex(
         (obj) => obj.foodId.toString() === foodId
       );
-      if(foodIndex !== -1){
-        const tempFoodSubTotal = user.cart.restu[restuIndex].foods[foodIndex].subTotal
-        if(user.cart.restu[restuIndex].foods.length === 1){
-          user.cart.restu.splice(restuIndex, 1)
+      if (foodIndex !== -1) {
+        const tempFoodSubTotal =
+          user.cart.restu[restuIndex].foods[foodIndex].subTotal;
+        if (user.cart.restu[restuIndex].foods.length === 1) {
+          user.cart.restu.splice(restuIndex, 1);
         } else {
-          user.cart.restu[restuIndex].foods.splice(foodIndex, 1)
-          user.cart.restu[restuIndex].resSubTotal -= tempFoodSubTotal
+          user.cart.restu[restuIndex].foods.splice(foodIndex, 1);
+          user.cart.restu[restuIndex].resSubTotal -= tempFoodSubTotal;
         }
-        user.cart.total -= tempFoodSubTotal
+        user.cart.total -= tempFoodSubTotal;
       }
     }
 
-    await user.save()
+    await user.save();
     return res.status(200).json({
       success: true,
       message: "Remove From Cart",
-      cart: user.cart
-    })
-
+      cart: user.cart,
+    });
   } catch (error) {
     console.log("Catch Error:: ", error);
     return res.status(500).json({
@@ -455,53 +462,53 @@ exports.removeFromCart = async(req, res) =>{
       message: error.message,
     });
   }
-}
+};
 
-exports.increaseQutOfCartFood = async(req, res) => {
+exports.increaseQutOfCartFood = async (req, res) => {
   try {
+    const { resId, foodId } = req.body;
 
-    const {resId, foodId} = req.body
-
-    if(!resId || !foodId){
+    if (!resId || !foodId) {
       return res.status(200).json({
         success: false,
         message: "Enter All Details",
       });
     }
 
-    const user = await User.findById(req.user._id)
-    
+    const user = await User.findById(req.user._id);
+
     const restuIndex = user.cart.restu.findIndex(
       (obj) => obj.resId.toString() === resId
     );
 
-    if(restuIndex !== -1){
+    if (restuIndex !== -1) {
       const foodIndex = user.cart.restu[restuIndex].foods.findIndex(
         (obj) => obj.foodId.toString() === foodId
       );
-      if(foodIndex !== -1){
-        const tempFoodPrice = user.cart.restu[restuIndex].foods[foodIndex].foodPrice
-        if(user.cart.restu[restuIndex].foods[foodIndex].foodQut === 10){
+      if (foodIndex !== -1) {
+        const tempFoodPrice =
+          user.cart.restu[restuIndex].foods[foodIndex].foodPrice;
+        if (user.cart.restu[restuIndex].foods[foodIndex].foodQut === 10) {
           return res.status(401).json({
             success: false,
-            message: "Can't Add more then 10"
-          })
+            message: "Can't Add more then 10",
+          });
         } else {
-          user.cart.restu[restuIndex].foods[foodIndex].foodQut += 1 
-          user.cart.restu[restuIndex].foods[foodIndex].subTotal +=  tempFoodPrice
-          user.cart.restu[restuIndex].resSubTotal += tempFoodPrice
+          user.cart.restu[restuIndex].foods[foodIndex].foodQut += 1;
+          user.cart.restu[restuIndex].foods[foodIndex].subTotal +=
+            tempFoodPrice;
+          user.cart.restu[restuIndex].resSubTotal += tempFoodPrice;
         }
-        user.cart.total += tempFoodPrice
+        user.cart.total += tempFoodPrice;
       }
     }
 
-    await user.save()
+    await user.save();
     return res.status(200).json({
       success: true,
       message: "Cart Update Successfully",
-      cart: user.cart
-    })
-    
+      cart: user.cart,
+    });
   } catch (error) {
     console.log("Catch Error:: ", error);
     return res.status(500).json({
@@ -509,54 +516,54 @@ exports.increaseQutOfCartFood = async(req, res) => {
       message: error.message,
     });
   }
-}
-exports.decreaseQutOfCartFood = async(req, res) => {
+};
+exports.decreaseQutOfCartFood = async (req, res) => {
   try {
+    const { resId, foodId } = req.body;
 
-    const {resId, foodId} = req.body
-
-    if(!resId || !foodId){
+    if (!resId || !foodId) {
       return res.status(200).json({
         success: false,
         message: "Enter All Details",
       });
     }
 
-    const user = await User.findById(req.user._id)
-    
+    const user = await User.findById(req.user._id);
+
     const restuIndex = user.cart.restu.findIndex(
       (obj) => obj.resId.toString() === resId
     );
 
-    if(restuIndex !== -1){
+    if (restuIndex !== -1) {
       const foodIndex = user.cart.restu[restuIndex].foods.findIndex(
         (obj) => obj.foodId.toString() === foodId
       );
-      if(foodIndex !== -1){
-        const tempFoodPrice = user.cart.restu[restuIndex].foods[foodIndex].foodPrice
-        if(user.cart.restu[restuIndex].foods[foodIndex].foodQut === 1){
-          if(user.cart.restu[restuIndex].foods.length === 1){
-            user.cart.restu.splice(restuIndex, 1)
+      if (foodIndex !== -1) {
+        const tempFoodPrice =
+          user.cart.restu[restuIndex].foods[foodIndex].foodPrice;
+        if (user.cart.restu[restuIndex].foods[foodIndex].foodQut === 1) {
+          if (user.cart.restu[restuIndex].foods.length === 1) {
+            user.cart.restu.splice(restuIndex, 1);
           } else {
-            user.cart.restu[restuIndex].foods.splice(restuIndex, 1)
-          user.cart.restu[restuIndex].resSubTotal -= tempFoodPrice
+            user.cart.restu[restuIndex].foods.splice(restuIndex, 1);
+            user.cart.restu[restuIndex].resSubTotal -= tempFoodPrice;
           }
         } else {
-          user.cart.restu[restuIndex].foods[foodIndex].foodQut -= 1 
-          user.cart.restu[restuIndex].foods[foodIndex].subTotal -=  tempFoodPrice
-          user.cart.restu[restuIndex].resSubTotal -= tempFoodPrice
+          user.cart.restu[restuIndex].foods[foodIndex].foodQut -= 1;
+          user.cart.restu[restuIndex].foods[foodIndex].subTotal -=
+            tempFoodPrice;
+          user.cart.restu[restuIndex].resSubTotal -= tempFoodPrice;
         }
-        user.cart.total -= tempFoodPrice
+        user.cart.total -= tempFoodPrice;
       }
     }
 
-    await user.save()
+    await user.save();
     return res.status(200).json({
       success: true,
       message: "Cart Update Successfully",
-      cart: user.cart
-    })
-    
+      cart: user.cart,
+    });
   } catch (error) {
     console.log("Catch Error:: ", error);
     return res.status(500).json({
@@ -564,44 +571,42 @@ exports.decreaseQutOfCartFood = async(req, res) => {
       message: error.message,
     });
   }
-}
+};
 
-exports.addOrRemoveFoodInSave = async(req, res) => {
+exports.addOrRemoveFoodInSave = async (req, res) => {
   try {
+    const { foodId } = req.params;
 
-    const {foodId} = req.params
-
-    if(!foodId){
+    if (!foodId) {
       return res.status(400).json({
         success: false,
-        message: "Don't have foodid"
-      })
+        message: "Don't have foodid",
+      });
     }
 
-    const user = await User.findById(req.user._id).select("saveFood")
-    const food = await Food.findById(foodId)
+    const user = await User.findById(req.user._id).select("saveFood");
+    const food = await Food.findById(foodId);
 
-    if(!food){
+    if (!food) {
       return res.status(400).json({
         success: false,
-        message: "Food Not Found"
-      })
+        message: "Food Not Found",
+      });
     }
 
-    const index = user.saveFood.indexOf(foodId)
-    if(index !== -1){
-      user.saveFood.splice(index,1)
+    const index = user.saveFood.indexOf(foodId);
+    if (index !== -1) {
+      user.saveFood.splice(index, 1);
     } else {
-      user.saveFood.unshift(foodId)
+      user.saveFood.unshift(foodId);
     }
 
-    await user.save()
+    await user.save();
 
     return res.status(200).json({
       success: true,
       message: "Food Save Successfully",
-    })
-    
+    });
   } catch (error) {
     console.log("Catch Error:: ", error);
     return res.status(500).json({
@@ -609,18 +614,21 @@ exports.addOrRemoveFoodInSave = async(req, res) => {
       message: error.message,
     });
   }
-}
+};
 
-exports.getMySaveFoods = async(req, res) => {
+exports.getMySaveFoods = async (req, res) => {
   try {
-
-    const foods = await User.findById(req.user._id).populate({path: "saveFood", populate: {path: "foodRestaurant", select: "_id resName"}}).select("saveFood")
+    const foods = await User.findById(req.user._id)
+      .populate({
+        path: "saveFood",
+        populate: { path: "foodRestaurant", select: "_id resName" },
+      })
+      .select("saveFood");
 
     return res.status(200).json({
       success: true,
-      foods:foods.saveFood
-    })
-
+      foods: foods.saveFood,
+    });
   } catch (error) {
     console.log("Catch Error:: ", error);
     return res.status(500).json({
@@ -628,16 +636,36 @@ exports.getMySaveFoods = async(req, res) => {
       message: error.message,
     });
   }
-}
+};
 
-exports.getMyOrderHistory = async(req, res) => {
+exports.getMyOrderHistory = async (req, res) => {
   try {
-    
-    const orders = await Order.find({"userId": req.user._id}).populate({path: "orders.restu.foods.foodId", select: "foodWeight"}).sort({creatdAt: -1})
+    const orders = await Order.find({ userId: req.user._id })
+      .populate({ path: "orders.restu.foods.foodId", select: "foodWeight" })
+      .sort({ creatdAt: -1 });
 
     return res.status(200).json({
       success: true,
-      orders
+      orders,
+    });
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.getMyActiveOrder = async (req, res) => {
+  try {
+    const order = await Order.findOne({
+      $or: [{ status: "res accept" }, { status: "new" }],
+    }).populate({ path: "orders.restu.foods.foodId", select: "foodWeight" });
+
+    return res.status(200).json({
+      success: true, 
+      order
     })
 
   } catch (error) {
@@ -647,5 +675,4 @@ exports.getMyOrderHistory = async(req, res) => {
       message: error.message,
     });
   }
-
-}
+};

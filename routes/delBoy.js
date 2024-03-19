@@ -1,5 +1,5 @@
 const express = require('express')
-const { dbFirstSignUp, dbEmailVerify, dbPhoneMakeOtp, dbPhoneVerify, dbPrimarySignUp, loadDb, dbLastSignUp, dbLogin, getDbNewOrders, dbUpdateLiveLocation } = require('../controller/delBoy')
+const { dbFirstSignUp, dbEmailVerify, dbPhoneMakeOtp, dbPhoneVerify, dbPrimarySignUp, loadDb, dbLastSignUp, dbLogin, getDbNewOrders, dbUpdateLiveLocation, dbAcceptOrder, dbMyActiveOrder } = require('../controller/delBoy')
 const { isDbAuth } = require('../middleware/userAuth')
 const router = express.Router()
 
@@ -18,6 +18,8 @@ router.route('/delBoy/last/signup').post(isDbAuth, dbLastSignUp)
 router.route('/delBoy/update/location').post(isDbAuth, dbUpdateLiveLocation)
 
 router.route('/delBoy/neworders').get(isDbAuth, getDbNewOrders)
+router.route('/delBoy/accept/:ordId').get(isDbAuth, dbAcceptOrder)
+router.route('/delBoy/active/order').get(isDbAuth, dbMyActiveOrder)
 
 
 module.exports = router
