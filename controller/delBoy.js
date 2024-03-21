@@ -594,3 +594,40 @@ exports.dbMyActiveOrder = async (req, res) => {
     });
   }
 }
+
+exports.dbUpdateResStatus = async (req, res) => {
+  try {
+    const {ordId, resId} = req.body;
+
+    const order = await Order.findById(ordId).populate({
+      path: 'orders.restu.resId',
+      select: 'resName resAddress resLatLong'
+    })
+
+    if(!order){
+      return res.status(400).json({
+        success: false,
+        message: "Order Not Found"
+      })
+    }
+
+    for(let i=0; i<order?.orders?.restu.length; i++){
+      if(resId.toString() == order.orders.restu[i].resId._id.toString()){
+        order.orders.restu[i].resStatus = "on way"
+      }
+    }
+
+    await order.save()
+    return res.status(200).json({
+      success: true,
+      message: "Status Updated"
+    })
+
+  } catch (error) {
+    console.log("Catch Error" + error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
