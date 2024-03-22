@@ -348,7 +348,15 @@ exports.dbLogin = async (req, res) => {
 exports.loadDb = async (req, res) => {
   try {
     const delBoy = await DelBoy.findById(req.delBoy._id);
-    return res.status(200).json({ success: true, delBoy });
+    let userId = null
+    if(delBoy?.active === true && delBoy.isAvilable === false){
+      const order = await Order.findOne({deliveryBoyId: req.delBoy._id, status: "on way"}).select("userId")
+      if(order){
+        userId = order?.userId
+      }
+    }
+
+    return res.status(200).json({ success: true, delBoy, userId });
   } catch (error) {
     console.log("Catch Error" + error);
     return res.status(500).json({

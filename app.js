@@ -36,6 +36,7 @@ app.use(cookiParser())
 const {connectDataBase} = require('./db/conDB')
 const { resNewOrderAdd } = require('./utils/socketHendlars/restaurant')
 const { dbNewOrderAdd } = require('./utils/socketHendlars/delBoy')
+const { userOrderLiveLocation } = require('./utils/socketHendlars/user')
 connectDataBase()
 
 
@@ -104,6 +105,10 @@ io.on('connection', (socket)=>{
 
     socket.on("new-order-from-restu", ({ordId})=>{
         dbNewOrderAdd(io, ordId, onlineDeliveryBoy)
+    })
+
+    socket.on("db-live-loc-for-user", ({location, userId})=>{
+        userOrderLiveLocation(io, location, userId, onlineCustomers)
     })
 
 

@@ -59,13 +59,35 @@ exports.adminLogin = async(req,res)=>{
     }
 }
 
+exports.loadAdmin = async(req,res)=>{
+    try {
+        const admin = await Admin.findById(req.admin._id);
+        return res.status(200).json({ success: true, admin });
+    } catch (error) {
+        console.log('Catch Error:: ', error)
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+}
+
 exports.makeAdmin = async(req,res)=>{
-    const {email,password} = req.body;
-    const isActive = true
-    const admin = await Admin.create({
-        email,password,isActive:true
-    })
-    return res.status(201).json({success: true, admin})
+    try {
+        const {email,password} = req.body;
+        const isActive = true
+        const admin = await Admin.create({
+            email,password,isActive:true
+        })
+        return res.status(201).json({success: true, admin})
+    } catch (error) {
+        console.log('Catch Error:: ', error)
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+
 }
 
 exports.makeResPortal = async(req, res)=>{

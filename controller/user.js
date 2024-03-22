@@ -660,7 +660,7 @@ exports.getMyOrderHistory = async (req, res) => {
 exports.getMyActiveOrder = async (req, res) => {
   try {
     const order = await Order.findOne({
-      $or: [{ status: "res accept" }, { status: "new" }],
+      $or: [{ status: "res accept" }, { status: "new" }, { status: "on way" }],
     }).populate({ path: "orders.restu.foods.foodId", select: "foodWeight" });
 
     return res.status(200).json({
