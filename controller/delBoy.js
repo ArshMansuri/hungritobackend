@@ -631,3 +631,89 @@ exports.dbUpdateResStatus = async (req, res) => {
     });
   }
 }
+
+exports.dbActiveDeactive = async (req, res) => {
+  try {
+    const delBoy = await DelBoy.findById(req.delBoy._id)
+
+    const order = await Order.findOne({deliveryBoyId: delBoy._id, status: { $ne: "delivered" }})
+
+    if(order){
+      return res.status(400).json({
+        success: false,
+        message: "first complate your order"
+      })
+    }
+
+    if(delBoy?.active){
+      delBoy.active = false
+    } else {
+      delBoy.active = true
+    }
+
+    await delBoy.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Updated"
+    })
+
+  } catch (error) {
+    console.log("Catch Error" + error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
+exports.dbDeliverdOrder = async (req, res) => {
+try {
+
+  const { ordId } = req.params;
+
+  if(!ordId){
+    return res.status(400).json({
+      success: false,
+      message: "Ordid not found"
+    })
+  }
+
+  const delBoy = await DelBoy.findById(req.delBoy._id)
+  const order = await Order.findById(req.params.ordId)
+
+  if(!order){
+    return res.status(400).json({
+      success: false,
+      message: "Order Not FOund"
+    })
+  }
+
+  if(order.payMode === "Cod"){
+    order.isPay = true
+    delBoy.money -= order?.orders?.total
+  } else {
+    delBoy.money += order?.orders?.deliveryCharg
+  }
+
+  order.status = "delivered"
+  await order.save()
+
+  
+
+  delBoy.isAvilable = true
+  await delBoy.save()
+
+  return res.status(200).json({
+    success: true,
+    message: "Orderd Delivered Successfully"
+  })
+
+} catch (error) {
+  console.log("Catch Error" + error);
+  return res.status(500).json({
+    success: false,
+    message: error.message,
+  });
+}
+}

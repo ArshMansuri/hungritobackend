@@ -108,6 +108,12 @@ const DelBoySchema = mongoose.Schema({
         type: String,
         select: false
     },
+
+    money: {
+        type: Number,
+        default: 0
+    },
+    
     creatdAt:{
         type: Date,
         default: Date.now

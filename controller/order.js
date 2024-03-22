@@ -1,5 +1,6 @@
 const DelBoy = require("../model/DelBoy");
 const Order = require("../model/Order");
+const Admin = require("../model/Admin");
 const Restaurant = require("../model/Restaurant");
 const User = require("../model/User");
 const stripe = require("stripe")(process.env.STRIPE_KEY);
@@ -67,6 +68,16 @@ exports.createCodOrder = async (req, res) => {
       restu.resOrder.unshift(resTempObj);
       await restu.save();
     }
+
+    const admin = await Admin.findOne({email: "admin@gmail.com"})
+    if(!admin){
+      return res.status(400).json({
+        success: false,
+        message: "There is isuue",
+      });
+    }
+    admin.money += order?.orders?.total
+    await admin.save()
 
     user.cart = {};
     await user.save();
@@ -148,6 +159,7 @@ exports.createOnlineOrder = async (req, res) => {
     for (let i = 0; i < user.cart.restu.length; i++) {
       const resId = user.cart.restu[i].resId;
       const restu = await Restaurant.findById(resId);
+      // restu.money += user.cart.restu[i].resSubTotal 
       const resTempObj = {
         orderId: order._id,
         userId: req.user._id,
@@ -159,6 +171,17 @@ exports.createOnlineOrder = async (req, res) => {
 
     user.cart = {};
     await user.save();
+
+    const admin = await Admin.findOne({email: "admin@gmail.com"})
+    if(!admin){
+      return res.status(400).json({
+        success: false,
+        message: "There is isuue",
+      });
+    }
+    admin.money += order?.orders?.total
+    await admin.save()
+    
     return res.status(201).json({
       success: true,
       message: "Order Place Successfully",

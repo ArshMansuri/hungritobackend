@@ -18,6 +18,11 @@ const AdminSchema = mongoose.Schema({
     isActive:{
         type: Boolean,
         default: false
+    },
+    
+    money: {
+        type: Number,
+        default: 0
     }
 
 })

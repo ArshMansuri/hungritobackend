@@ -598,13 +598,23 @@ exports.resAcceptOrder = async (req, res) => {
           },
         },
         active: {$eq: true},
-        isAvilable: {$eq: true}
+        isAvilable: {$eq: true},
+        money: { $gt: 199 }
       })
 
       if(delBoy && delBoy?.isAvilable === true && delBoy?.active === true){
         order.deliveryBoyId = delBoy._id
         delBoy.isAvilable = false
         await delBoy.save()
+
+        for(let i=0; i<order?.orders?.restu.length; i++){
+          const resForMoney = await Restaurant.findById(order?.orders?.restu[i]?.resId)
+          if(resForMoney){
+            resForMoney.money += order?.orders?.restu[i].resSubTotal
+            await resForMoney.save()            
+          }
+        }
+
         // await order.save();
       } else {
         return res.status(401).json({

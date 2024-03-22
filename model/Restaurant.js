@@ -189,6 +189,11 @@ const ResSchema = mongoose.Schema({
         foods: Array
     }],
 
+    money: {
+        type: Number,
+        default: 0
+    },
+
     creatdAt:{
         type: Date,
         default: Date.now
