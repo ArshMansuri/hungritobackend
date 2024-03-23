@@ -113,6 +113,11 @@ const DelBoySchema = mongoose.Schema({
         type: Number,
         default: 0
     },
+
+    isBanned: {
+        type: Boolean,
+        default: false
+    },
     
     creatdAt:{
         type: Date,

@@ -424,7 +424,7 @@ exports.resLogin = async (req, res) => {
       });
     }
 
-    if (restu.isVerify === false) {
+    if (restu.isVerify === false || restu.active === false) {
       return res.status(400).json({
         success: false,
         message: "Invalide Details",
