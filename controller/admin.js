@@ -151,7 +151,7 @@ exports.addResFoodType = async (req, res) => {
 
 exports.getAllResList = async (req, res) => {
   try {
-    const restus = await Restaurant.find().select(
+    const restus = await Restaurant.find({isVerify: true}).select(
       "resName resCompletAddress.city active money"
     );
 
@@ -170,7 +170,7 @@ exports.getAllResList = async (req, res) => {
 
 exports.getAllDbList = async (req, res) => {
   try {
-    const delBoys = await DelBoy.find().select(
+    const delBoys = await DelBoy.find({isVerify: true}).select(
       "dbName dbCompletAddress.city isBanned money dbImage.publicUrl"
     );
 
@@ -296,7 +296,7 @@ exports.getDetailNewRes = async (req, res) => {
     const {resId} = req.params
 
     const restu = await Restaurant.findById(resId).select(
-      "resName resCompletAddress.city resAddress resPhone.phone resOwnerName"
+      "resName resCompletAddress.city resAddress resPhone.phone resOwnerName money"
     );
 
     if(!restu && restu?.isVerify === true){
@@ -411,7 +411,7 @@ exports.getDetailNewdb = async (req, res) => {
     const {dbId} = req.params
 
     const delBoy = await DelBoy.findById(dbId).select(
-      "dbName dbCompletAddress.city dbAddress dbImage.publicUrl dbVihicalImage.publicUrl dbLicenseImage.publicUrl dbPhone.phone"
+      "dbName dbCompletAddress.city dbAddress dbImage.publicUrl dbVihicalImage.publicUrl dbLicenseImage.publicUrl dbPhone.phone money"
     );
 
     if(!delBoy && delBoy?.isVerify === true){
@@ -489,6 +489,220 @@ exports.adminRejectDb = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Reject Successfully",
+    });
+
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.adminSendResEarnMoney = async (req, res) => {
+  try {
+
+    const {resId} = req.params
+    const {ammount} = req.body
+
+    const admin = await Admin.findById(req.admin._id)
+    console.log(ammount)
+    if(admin.email !== "admin@gmail.com"){
+      return res.status(400).json({
+        success: false,
+        message: "You Can't Update Money",
+      });
+    }
+
+    if(!ammount || !resId){
+      return res.status(400).json({
+        success: false,
+        message: "Enter All Detail",
+      });
+    }
+
+    const restu = await Restaurant.findById(resId)
+
+    if(!restu){
+      return res.status(400).json({
+        success: false,
+        message: "Restaurant Not Available",
+      });
+    }
+
+    restu.money -= Number.parseInt(ammount)
+    admin.money -= Number.parseInt(ammount)
+
+    await restu.save()
+    await admin.save()
+
+    // send mail to restaurant
+
+    return res.status(200).json({
+      success: true,
+      message: "Money Send Successfully",
+    });
+
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.adminSendDbEarnMoney = async (req, res) => {
+  try {
+
+    const {dbId} = req.params
+    const {ammount} = req.body
+
+    const admin = await Admin.findById(req.admin._id)
+    if(admin.email !== "admin@gmail.com"){
+      console.log("inn")
+      return res.status(400).json({
+        success: false,
+        message: "You Can't Update Money",
+      });
+    }
+
+
+    if(!ammount || !dbId){
+      return res.status(400).json({
+        success: false,
+        message: "Enter All Detail",
+      });
+    }
+
+    const delBoy = await DelBoy.findById(dbId)
+
+    if(!delBoy){
+      return res.status(400).json({
+        success: false,
+        message: "Delivery Boy Not Available",
+      });
+    }
+
+    delBoy.money -= Number.parseInt(ammount)
+    admin.money -= Number.parseInt(ammount)
+
+    await delBoy.save()
+    await admin.save()
+
+    // send mail to restaurant
+
+    return res.status(200).json({
+      success: true,
+      message: "Money Send Successfully",
+    });
+
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.adminReceiveResMoney = async (req, res) => {
+  try {
+
+    const {resId} = req.params
+    const {ammount} = req.body
+
+    const admin = await Admin.findById(req.admin._id)
+    if(admin.email !== "admin@gmail.com"){
+      console.log("inn")
+      return res.status(400).json({
+        success: false,
+        message: "You Can't Update Money",
+      });
+    }
+
+    if(!ammount || !resId){
+      return res.status(400).json({
+        success: false,
+        message: "Enter All Detail",
+      });
+    }
+
+    const restu = await Restaurant.findById(resId)
+
+    if(!restu){
+      return res.status(400).json({
+        success: false,
+        message: "Restaurant Not Available",
+      });
+    }
+
+    restu.money += Number.parseInt(ammount)
+    admin.money += Number.parseInt(ammount)
+
+    await restu.save()
+    await admin.save()
+
+    // send mail to restaurant
+
+    return res.status(200).json({
+      success: true,
+      message: "Money Send Successfully",
+    });
+
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.adminReceiveDbMoney = async (req, res) => {
+  try {
+
+    const {dbId} = req.params
+    const {ammount} = req.body
+
+    const admin = await Admin.findById(req.admin._id)
+    if(admin.email !== "admin@gmail.com"){
+      console.log("inn")
+      return res.status(400).json({
+        success: false,
+        message: "You Can't Update Money",
+      });
+    }
+
+
+    if(!ammount || !dbId){
+      return res.status(400).json({
+        success: false,
+        message: "Enter All Detail",
+      });
+    }
+
+    const delBoy = await DelBoy.findById(dbId)
+
+    if(!delBoy){
+      return res.status(400).json({
+        success: false,
+        message: "Delivery Boy Not Available",
+      });
+    }
+
+    delBoy.money += Number.parseInt(ammount)
+    admin.money += Number.parseInt(ammount)
+
+    await delBoy.save()
+    await admin.save()
+
+    // send mail to restaurant
+
+    return res.status(200).json({
+      success: true,
+      message: "Money Send Successfully",
     });
 
   } catch (error) {

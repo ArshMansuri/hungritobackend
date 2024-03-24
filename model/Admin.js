@@ -20,10 +20,10 @@ const AdminSchema = mongoose.Schema({
         default: false
     },
     
-    money: {
-        type: Number,
-        default: 0
-    },
+    // money: {
+    //     type: Number,
+    //     default: 0
+    // },
 
     username:{
         type: String

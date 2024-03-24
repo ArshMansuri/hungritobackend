@@ -1,5 +1,5 @@
 const express = require("express")
-const { makeResPortal, adminLogin, makeAdmin, loadAdmin, getAllResList, resActiveInActive, getAllDbList, dbBannedUnBanned, getAllNewResList, getDetailNewRes, adminAcceptRes, adminRejectRes, getAllNewDbList, getDetailNewdb, adminRejectDb, adminAcceptDb } = require("../controller/admin")
+const { makeResPortal, adminLogin, makeAdmin, loadAdmin, getAllResList, resActiveInActive, getAllDbList, dbBannedUnBanned, getAllNewResList, getDetailNewRes, adminAcceptRes, adminRejectRes, getAllNewDbList, getDetailNewdb, adminRejectDb, adminAcceptDb, adminSendDbEarnMoney, adminReceiveResMoney, adminSendResEarnMoney, adminReceiveDbMoney } = require("../controller/admin")
 const { isAdminAuth } = require("../middleware/userAuth")
 const router = express.Router()
 
@@ -25,6 +25,11 @@ router.route('/admin/new/db/list').get(isAdminAuth, getAllNewDbList)
 router.route('/admin/new/db/detail/:dbId').get(isAdminAuth, getDetailNewdb)
 router.route('/admin/new/db/accept/:dbId').get(isAdminAuth, adminAcceptDb)
 router.route('/admin/new/db/reject/:dbId').delete(isAdminAuth, adminRejectDb)
+
+router.route('/admin/send/res/earn/money/:resId').post(isAdminAuth, adminSendResEarnMoney)
+router.route('/admin/receive/res/money/:resId').post(isAdminAuth, adminReceiveResMoney)
+router.route('/admin/send/db/earn/money/:dbId').post(isAdminAuth, adminSendDbEarnMoney)
+router.route('/admin/receive/db/money/:dbId').post(isAdminAuth, adminReceiveDbMoney)
 
 
 module.exports = router

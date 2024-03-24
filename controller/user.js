@@ -250,6 +250,11 @@ exports.getNearestRes = async (req, res) => {
         },
       },
       {
+        $match: {
+          isVerify: true 
+        }
+      },
+      {
         $sort: {
           distance: 1,
         },
