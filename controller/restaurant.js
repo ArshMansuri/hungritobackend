@@ -6,6 +6,11 @@ const ResType = require("../model/Restype");
 const Category = require("../model/Categories");
 const Order = require("../model/Order");
 const DelBoy = require("../model/DelBoy");
+const {
+  calculatePercentage,
+  picChartPercentage,
+} = require("../utils/helper/helper");
+const Food = require("../model/Food");
 
 exports.resFirstSignUp = async (req, res) => {
   try {
@@ -512,7 +517,6 @@ exports.getResNewOrder = async (req, res) => {
       .populate({ path: "userId", select: "username" })
       .sort({ creatdAt: -1 });
 
-
     // const orders = await Order.find({
     //   "orders.restu.resId": req.restu._id,
     //   "orders.restu.resStatus": "pending",
@@ -534,18 +538,21 @@ exports.getResNewOrder = async (req, res) => {
     //   }
     // }
 
-    let sendOrders = []
-    let index = 0
-    for(let i=0; i<orders?.length; i++){
-      for(let j=0; j<orders[i]?.orders?.restu.length; j++){
-        if(orders[i]?.orders?.restu[j].resId.toString() === req.restu._id.toString() && orders[i]?.orders?.restu[j].isAccept === false){
-          sendOrders[index] = orders[i]
-          sendOrders[index].orders.restu = orders[i]?.orders?.restu[j]
-          index++
+    let sendOrders = [];
+    let index = 0;
+    for (let i = 0; i < orders?.length; i++) {
+      for (let j = 0; j < orders[i]?.orders?.restu.length; j++) {
+        if (
+          orders[i]?.orders?.restu[j].resId.toString() ===
+            req.restu._id.toString() &&
+          orders[i]?.orders?.restu[j].isAccept === false
+        ) {
+          sendOrders[index] = orders[i];
+          sendOrders[index].orders.restu = orders[i]?.orders?.restu[j];
+          index++;
         }
       }
     }
-
 
     return res.status(200).json({
       success: true,
@@ -581,37 +588,41 @@ exports.resAcceptOrder = async (req, res) => {
       });
     }
 
-    let sendDelBoyLiveOrd = false
+    let sendDelBoyLiveOrd = false;
     if (order.status === "new") {
-      sendDelBoyLiveOrd = true
+      sendDelBoyLiveOrd = true;
       order.status = "res accept";
       order.resLatLong.coordinates = restu.resLatLong.coordinates;
 
       const delBoy = await DelBoy.findOne({
-        'dbCurrentLoc.coordinates': {
+        "dbCurrentLoc.coordinates": {
           $near: {
             $geometry: {
               type: "Point",
               coordinates: restu.resLatLong.coordinates,
             },
-            $maxDistance: 15000
+            $maxDistance: 15000,
           },
         },
-        active: {$eq: true},
-        isAvilable: {$eq: true},
-        money: { $gt: 199 }
-      })
+        active: { $eq: true },
+        isAvilable: { $eq: true },
+        money: { $gt: 199 },
+      });
 
-      if(delBoy && delBoy?.isAvilable === true && delBoy?.active === true){
-        order.deliveryBoyId = delBoy._id
-        delBoy.isAvilable = false
-        await delBoy.save()
+      console.log(delBoy)
 
-        for(let i=0; i<order?.orders?.restu.length; i++){
-          const resForMoney = await Restaurant.findById(order?.orders?.restu[i]?.resId)
-          if(resForMoney){
-            resForMoney.money += order?.orders?.restu[i].resSubTotal
-            await resForMoney.save()            
+      if (delBoy && delBoy?.isAvilable === true && delBoy?.active === true) {
+        order.deliveryBoyId = delBoy._id;
+        delBoy.isAvilable = false;
+        await delBoy.save();
+
+        for (let i = 0; i < order?.orders?.restu.length; i++) {
+          const resForMoney = await Restaurant.findById(
+            order?.orders?.restu[i]?.resId
+          );
+          if (resForMoney) {
+            resForMoney.money += order?.orders?.restu[i].resSubTotal;
+            await resForMoney.save();
           }
         }
 
@@ -624,25 +635,337 @@ exports.resAcceptOrder = async (req, res) => {
       }
     }
 
-    const resIndex = order.orders.restu.findIndex(obj=> obj.resId.toString() === restu._id.toString())
-    if(resIndex === -1){
+    const resIndex = order.orders.restu.findIndex(
+      (obj) => obj.resId.toString() === restu._id.toString()
+    );
+    if (resIndex === -1) {
       return res.status(400).json({
         success: false,
-        message: "Somthing Went Wrong"
-      })
+        message: "Somthing Went Wrong",
+      });
     }
 
-    if(order.orders.restu[resIndex].isAccept === false){
-      order.orders.restu[resIndex].isAccept = true
+    if (order.orders.restu[resIndex].isAccept === false) {
+      order.orders.restu[resIndex].isAccept = true;
     }
 
-    await order.save()
+    await order.save();
 
     return res.status(200).json({
       success: true,
       message: "Order Accepted",
-      sendDelBoyLiveOrd
+      sendDelBoyLiveOrd,
     });
+  } catch (error) {
+    console.log("Catch Error" + error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.resDashCharts = async (req, res) => {
+  try {
+    let topFourCart = {};
+    let pieChart = {};
+
+    const today = new Date();
+    const thisMonth = {
+      start: new Date(today.getFullYear(), today.getMonth(), 1),
+      end: today,
+    };
+    var previousMonth = today.getMonth() === 0 ? 11 : today.getMonth() - 1;
+    var previousYear =
+      today.getMonth() === 0 ? today.getFullYear() - 1 : today.getFullYear();
+    var previousDate = new Date(today);
+    previousDate.setDate(today.getDate() - 1);
+
+    const lastMonth = {
+      start: new Date(previousYear, previousMonth, 1),
+      end: new Date(previousYear, today.getMonth(), 0),
+    };
+
+    let lastWeekDate = {};
+    for (let i = 0; i < 7; i++) {
+      let dayMonth = today.getMonth();
+      if (today.getDate() < today.getDate() - i) {
+        dayMonth -= 1;
+      }
+      let day = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate() - i
+      );
+      day.setHours(0,0,0)
+      let dayName = day.toLocaleDateString("en-US", { weekday: "short" });
+      lastWeekDate = { ...lastWeekDate, [dayName]: day };
+    }
+
+    const todayOrder = await Order.find({
+      "orders.restu.resId": req.restu._id,
+      creatdAt: {
+        $gt: previousDate,
+        $lt: today,
+      },
+    });
+
+    const lastOrder = await Order.find({
+      "orders.restu.resId": req.restu._id,
+      creatdAt: {
+        $gt: new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          previousDate.getDate() 
+        ).setHours(0,0,0),
+        $lte: new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate()
+        ).setHours(0,0,0),  
+      },
+    });
+
+    const totalFood = await Food.find({
+      foodRestaurant: req.restu._id,
+      isDelete: false,
+    });
+
+    const todayFood = await Food.find({
+      foodRestaurant: req.restu._id,
+      isDelete: false,
+      creatdAt: {
+        $gt: today,
+        $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
+      },
+    });
+
+    const lastFood = await Food.find({
+      foodRestaurant: req.restu._id,
+      isDelete: false,
+      creatdAt: {
+        $gt: previousDate,
+        $lt: today,
+      },
+    });
+
+    let todayIncome = 0;
+    let lastDayIncome = 0;
+
+    for (let i = 0; i < todayOrder.length; i++) {
+      for (let j = 0; j < todayOrder[i]?.orders?.restu?.length; j++) {
+        if (
+          todayOrder[i]?.orders?.restu[j]?.resId?.toString() ===
+          req.restu._id.toString()
+        ) {
+          todayIncome += Number(
+            todayOrder[i]?.orders?.restu[j]?.resSubTotal || 0
+          );
+        }
+      }
+    }
+
+    for (let i = 0; i < lastOrder.length; i++) {
+      for (let j = 0; j < lastOrder[i]?.orders?.restu?.length; j++) {
+        if (
+          lastOrder[i]?.orders?.restu[j]?.resId?.toString() ===
+          req.restu._id.toString()
+        ) {
+          lastDayIncome += Number(
+            lastOrder[i]?.orders?.restu[j]?.resSubTotal || 0
+          );
+        }
+      }
+    }
+
+    const thisMonthOrder = await Order.find({
+      "orders.restu.resId": req.restu._id,
+      creatdAt: {
+        $gt: thisMonth.start,
+        $lt: thisMonth.end,
+      },
+    });
+
+    const lastMonthOrder = await Order.find({
+      "orders.restu.resId": req.restu._id,
+      creatdAt: {
+        $gt: lastMonth.start,
+        $lt: lastMonth.end,
+      },
+    });
+
+    let thisMonthIncome = 0;
+    let lastMontIncome = 0;
+
+    for (let i = 0; i < thisMonthOrder.length; i++) {
+      for (let j = 0; j < thisMonthOrder[i]?.orders?.restu?.length; j++) {
+        if (
+          thisMonthOrder[i]?.orders?.restu[j]?.resId?.toString() ===
+          req.restu._id.toString()
+        ) {
+          thisMonthIncome += Number(
+            thisMonthOrder[i]?.orders?.restu[j]?.resSubTotal || 0
+          );
+        }
+      }
+    }
+
+    for (let i = 0; i < lastMonthOrder.length; i++) {
+      for (let j = 0; j < lastMonthOrder[i]?.orders?.restu?.length; j++) {
+        if (
+          lastMonthOrder[i]?.orders?.restu[j]?.resId?.toString() ===
+          req.restu._id.toString()
+        ) {
+          lastMontIncome += Number(
+            lastMonthOrder[i]?.orders?.restu[j]?.resSubTotal || 0
+          );
+        }
+      }
+    }
+
+    let vegFood = 0;
+    let nonVegFood = 0;
+    let avilableFood = 0;
+    for (let i = 0; i < totalFood.length; i++) {
+      if (totalFood[i]?.foodType === "Veg") {
+        vegFood += 1;
+      } else if (totalFood[i]?.foodType === "Non Veg") {
+        nonVegFood += 1;
+      }
+      if (totalFood[i].isAvailable === true) {
+        avilableFood += 1;
+      }
+    }
+
+    const todayOrderPercent = calculatePercentage(
+      todayOrder.length,
+      lastOrder.length
+    );
+    const todayFoodPercent = calculatePercentage(
+      todayFood.length,
+      lastFood.length
+    );
+    const todayIncomePercent = calculatePercentage(todayIncome, lastDayIncome);
+    const thisMonthIncomePercent = calculatePercentage(
+      thisMonthIncome,
+      lastMontIncome
+    );
+
+    const vegFoodPercent = picChartPercentage(vegFood, totalFood.length);
+    const nonVegFoodPercent = picChartPercentage(nonVegFood, totalFood.length);
+    const avilableFoodPercent = picChartPercentage(
+      avilableFood,
+      totalFood.length
+    );
+
+    topFourCart = {
+      todayOrder: {
+        count: todayOrder.length,
+        percentage: todayOrderPercent,
+      },
+      totalFood: {
+        count: totalFood.length,
+        percentage: todayFoodPercent,
+      },
+      todayIncome: {
+        count: todayIncome,
+        percentage: todayIncomePercent,
+      },
+      thisMonthIncome: {
+        count: thisMonthIncome,
+        percentage: thisMonthIncomePercent,
+      },
+    };
+
+    pieChart = {
+      vegFood: {
+        count: vegFood,
+        percentage: vegFoodPercent,
+      },
+      nonVegFood: {
+        count: nonVegFood,
+        percentage: nonVegFoodPercent,  
+      },
+      avilableFood: {
+        count: avilableFood,
+        percentage: avilableFoodPercent,
+      },
+    };
+
+    const orderedDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const areaChart = [];
+    const weekRevenueChart = [];
+    for (let i = 0; i < orderedDays.length; i++) {
+      const order = await Order.find({
+        "orders.restu.resId": req.restu._id,
+        creatdAt: {
+          $gt: new Date(
+            lastWeekDate[orderedDays[i]].getFullYear(),
+            lastWeekDate[orderedDays[i]].getMonth(),
+            lastWeekDate[orderedDays[i]].getDate() 
+          ).setHours(0,0,0),
+          $lt:new Date(
+            lastWeekDate[orderedDays[i]].getFullYear(),
+            lastWeekDate[orderedDays[i]].getMonth(),
+            lastWeekDate[orderedDays[i]].getDate()+1
+          ).setHours(0,0,0)
+        },
+      });
+      areaChart.push(order.length);
+      let income = 0;
+      order.forEach((o)=>{
+        const resIndex = o?.orders.restu?.findIndex(obj=> obj.resId.toString() === req.restu._id.toString())
+        if(resIndex !== -1){
+          income += o?.orders?.restu[resIndex]?.resSubTotal
+        }
+      })
+      weekRevenueChart.push(income)
+    }
+
+    const thisYearRevenue = new Array(12).fill(0)
+    const lastYearRevenue = new Array(12).fill(0)
+    const thisYearOrder = await Order.find({
+      "orders.restu.resId": req.restu._id,
+      creatdAt:{
+        $gt: new Date(today.getFullYear(), 0, 1),
+        $lt: today
+      }
+    })
+
+    const lastYearOrder = await Order.find({
+      "orders.restu.resId": req.restu._id,
+      creatdAt:{
+        $gt: new Date(today.getFullYear()-1, 0, 1),
+        $lt: new Date(today.getFullYear(), 0, 1)
+      }
+    })
+
+    thisYearOrder.forEach((order)=>{
+      const creationDate = order?.creatdAt
+      const resIndex = order?.orders.restu?.findIndex(obj=> obj.resId.toString() === req.restu._id.toString())
+      if(resIndex !== -1){
+        thisYearRevenue[creationDate.getMonth()] += order?.orders?.restu[resIndex]?.resSubTotal
+      }
+    })
+
+    lastYearOrder.forEach((order)=>{
+      const creationDate = order?.creatdAt
+      const resIndex = order?.orders.restu?.findIndex(obj=> obj.resId.toString() === req.restu._id.toString())
+      if(resIndex !== -1){
+        lastYearRevenue[creationDate.getMonth()] += order?.orders?.restu[resIndex]?.resSubTotal
+      }
+    })
+
+    return res.status(200).json({
+      success: true,
+      topFourCart,
+      pieChart,
+      areaChart,
+      thisYearRevenue,
+      lastYearRevenue,
+      weekRevenueChart,
+    });
+
   } catch (error) {
     console.log("Catch Error" + error);
     return res.status(500).json({

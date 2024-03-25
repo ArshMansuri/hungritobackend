@@ -1,5 +1,5 @@
 const express = require("express")
-const { makeResPortal, adminLogin, makeAdmin, loadAdmin, getAllResList, resActiveInActive, getAllDbList, dbBannedUnBanned, getAllNewResList, getDetailNewRes, adminAcceptRes, adminRejectRes, getAllNewDbList, getDetailNewdb, adminRejectDb, adminAcceptDb, adminSendDbEarnMoney, adminReceiveResMoney, adminSendResEarnMoney, adminReceiveDbMoney } = require("../controller/admin")
+const { makeResPortal, adminLogin, makeAdmin, loadAdmin, getAllResList, resActiveInActive, getAllDbList, dbBannedUnBanned, getAllNewResList, getDetailNewRes, adminAcceptRes, adminRejectRes, getAllNewDbList, getDetailNewdb, adminRejectDb, adminAcceptDb, adminSendDbEarnMoney, adminReceiveResMoney, adminSendResEarnMoney, adminReceiveDbMoney, adminDashCharts, adminAddFilter } = require("../controller/admin")
 const { isAdminAuth } = require("../middleware/userAuth")
 const router = express.Router()
 
@@ -30,6 +30,10 @@ router.route('/admin/send/res/earn/money/:resId').post(isAdminAuth, adminSendRes
 router.route('/admin/receive/res/money/:resId').post(isAdminAuth, adminReceiveResMoney)
 router.route('/admin/send/db/earn/money/:dbId').post(isAdminAuth, adminSendDbEarnMoney)
 router.route('/admin/receive/db/money/:dbId').post(isAdminAuth, adminReceiveDbMoney)
+
+router.route('/admin/deshboard/charts').get(isAdminAuth, adminDashCharts)
+
+router.route('/admin/add/filter').post(isAdminAuth, adminAddFilter)
 
 
 module.exports = router

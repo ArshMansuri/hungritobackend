@@ -1,5 +1,6 @@
 const DelBoy = require("../model/DelBoy");
 const Order = require("../model/Order");
+const { picChartPercentage, calculatePercentage } = require("../utils/helper/helper");
 const { sendMail } = require("../utils/sendMail");
 const { sendOtp } = require("../utils/sendOtp");
 const cloudinary = require("cloudinary");
@@ -725,3 +726,161 @@ try {
   });
 }
 }
+
+
+exports.dbDashCharts = async (req, res) => {
+  try {
+    let topTwoCart = {};
+    let pieChart = {};
+
+    const today = new Date();
+    var previousDate = new Date(today);
+    previousDate.setDate(today.getDate() - 1);
+
+    let lastWeekDate = {};
+    for (let i = 0; i < 7; i++) {
+      let dayMonth = today.getMonth();
+      if (today.getDate() < today.getDate() - i) {
+        dayMonth -= 1;
+      }
+      let day = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate() - i
+      );
+      day.setHours(0,0,0)
+      let dayName = day.toLocaleDateString("en-US", { weekday: "short" });
+      lastWeekDate = { ...lastWeekDate, [dayName]: day };
+    }
+
+    const todayOrder = await Order.find({
+      deliveryBoyId: req.delBoy._id,
+      creatdAt: {
+        $gt: new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate() 
+        ).setHours(0,0,0),
+        $lt: today,
+      },
+    });
+
+    const lastOrder = await Order.find({
+      deliveryBoyId: req.delBoy._id,
+      creatdAt: {
+        $gt: new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          previousDate.getDate() 
+        ).setHours(0,0,0),
+        $lte: new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate()
+        ).setHours(0,0,0),  
+      },
+    });
+
+    let todayIncome = 0;
+    let lastDayIncome = 0;
+
+    for (let i = 0; i < todayOrder.length; i++) {
+      todayIncome += todayOrder[i]?.orders?.deliveryCharg
+    }
+
+    for (let i = 0; i < lastOrder.length; i++) {
+      lastDayIncome += lastOrder[i]?.orders?.deliveryCharg
+    }
+
+    const totalOrder = await Order.countDocuments({
+      deliveryBoyId: req.delBoy._id,
+    })
+
+    const totalCodOrder = await Order.countDocuments({
+      deliveryBoyId: req.delBoy._id,
+      payMode: "Cod"
+    })
+
+    const totalOnlineOrder = await Order.countDocuments({
+      deliveryBoyId: req.delBoy._id,
+      payMode: "Online"
+    })
+
+    const totalAcceptOrder = await Order.countDocuments({
+      deliveryBoyId: req.delBoy._id,
+      isDbAccept: true
+    })
+
+    const todayOrderPercent = calculatePercentage(
+      todayOrder.length,
+      lastOrder.length
+    );
+
+    const todayIncomePercent = calculatePercentage(todayIncome, lastDayIncome);
+    const totalCodOrderPercent = picChartPercentage(totalCodOrder, totalOrder)
+    const totalOnlineOrderPercent = picChartPercentage(totalOnlineOrder, totalOrder)
+    const totalAcceptOrderPercent = picChartPercentage(totalAcceptOrder, totalOrder)
+
+    topTwoCart = {
+      todayOrder: {
+        count: todayOrder.length,
+        percentage: todayOrderPercent,
+      },
+      todayIncome: {
+        count: todayIncome,
+        percentage: todayIncomePercent,
+      },
+    };
+
+
+    pieChart = {
+      totalCodOrder: {
+        count: totalCodOrder,
+        percentage: totalCodOrderPercent,
+      },
+      totalOnlineOrder: {
+        count: totalOnlineOrder,
+        percentage: totalOnlineOrderPercent,
+      },
+      totalAcceptOrder: {
+        count: totalAcceptOrder,
+        percentage: totalAcceptOrderPercent,
+      },
+    };
+
+    const orderedDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const areaChart = [];
+    for (let i = 0; i < orderedDays.length; i++) {
+      const order = await Order.find({
+        deliveryBoyId: req.delBoy._id,
+        creatdAt: {
+          $gt: new Date(
+            lastWeekDate[orderedDays[i]].getFullYear(),
+            lastWeekDate[orderedDays[i]].getMonth(),
+            lastWeekDate[orderedDays[i]].getDate() 
+          ).setHours(0,0,0),
+          $lt:new Date(
+            lastWeekDate[orderedDays[i]].getFullYear(),
+            lastWeekDate[orderedDays[i]].getMonth(),
+            lastWeekDate[orderedDays[i]].getDate()+1
+          ).setHours(0,0,0)
+        },
+      });
+      areaChart.push(order.length);
+    }
+
+    return res.status(200).json({
+      success: true,
+      topTwoCart,
+      pieChart,
+      areaChart,
+    });
+    
+  } catch (error) {
+    console.log("Catch Error" + error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

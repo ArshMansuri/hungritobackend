@@ -4,6 +4,7 @@ const Food = require("../model/Food");
 const { sendOtp } = require("../utils/sendOtp");
 const cloudinary = require("cloudinary");
 const Order = require("../model/Order");
+const Filter = require("../model/Filter");
 
 exports.userSignUp = async (req, res) => {
   try {
@@ -274,9 +275,12 @@ exports.getNearestRes = async (req, res) => {
       },
     ]);
 
+    const filters = await Filter.find()
+
     return res.status(200).json({
       success: true,
       restus,
+      filters
     });
   } catch (error) {
     console.log("Catch Error:: ", error);

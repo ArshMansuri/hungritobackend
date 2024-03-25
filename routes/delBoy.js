@@ -1,5 +1,5 @@
 const express = require('express')
-const { dbFirstSignUp, dbEmailVerify, dbPhoneMakeOtp, dbPhoneVerify, dbPrimarySignUp, loadDb, dbLastSignUp, dbLogin, getDbNewOrders, dbUpdateLiveLocation, dbAcceptOrder, dbMyActiveOrder, dbUpdateResStatus, dbActiveDeactive, dbDeliverdOrder } = require('../controller/delBoy')
+const { dbFirstSignUp, dbEmailVerify, dbPhoneMakeOtp, dbPhoneVerify, dbPrimarySignUp, loadDb, dbLastSignUp, dbLogin, getDbNewOrders, dbUpdateLiveLocation, dbAcceptOrder, dbMyActiveOrder, dbUpdateResStatus, dbActiveDeactive, dbDeliverdOrder, dbDashCharts } = require('../controller/delBoy')
 const { isDbAuth } = require('../middleware/userAuth')
 const router = express.Router()
 
@@ -22,6 +22,8 @@ router.route('/delBoy/accept/:ordId').get(isDbAuth, dbAcceptOrder)
 router.route('/delBoy/active/order').get(isDbAuth, dbMyActiveOrder)
 router.route('/delBoy/active/order/update/res/status').post(isDbAuth, dbUpdateResStatus)
 router.route('/delBoy/active/order/delivered/:ordId').get(isDbAuth, dbDeliverdOrder)
+
+router.route('/delBoy/deshboard/charts').get(isDbAuth, dbDashCharts)
 
 
 module.exports = router

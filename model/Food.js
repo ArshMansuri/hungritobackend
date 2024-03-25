@@ -66,6 +66,11 @@ const FoodSchema = mongoose.Schema({
     isDelete:{
         type: Boolean,
         default: false
+    },
+    
+    creatdAt:{
+        type: Date,
+        default: Date.now
     }
 
 })

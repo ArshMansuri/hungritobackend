@@ -22,5 +22,6 @@ router.route('/user/addoremove/save/:foodId').get(isUserAuth, addOrRemoveFoodInS
 router.route('/user/my/save').get(isUserAuth, getMySaveFoods)
 router.route('/user/my/order/history').get(isUserAuth, getMyOrderHistory)
 router.route('/user/my/order/active').get(isUserAuth, getMyActiveOrder)
+router.route('/user/my/order/active').get(isUserAuth, getMyActiveOrder)
 
 module.exports = router

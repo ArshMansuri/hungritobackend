@@ -1,5 +1,5 @@
 const express = require('express')
-const { resFirstSignUp, resEmailVerify, resPrimarySignUp, resPhoneMakeOtp, resPhoneVerify, resOwnerPhoneMakeOtp, resOwnerPhoneVerify, resSecondaySignUp, resLastSignUp, resLogin, loadRes, getResType, getCategories, getResNewOrder, resAcceptOrder } = require('../controller/restaurant')
+const { resFirstSignUp, resEmailVerify, resPrimarySignUp, resPhoneMakeOtp, resPhoneVerify, resOwnerPhoneMakeOtp, resOwnerPhoneVerify, resSecondaySignUp, resLastSignUp, resLogin, loadRes, getResType, getCategories, getResNewOrder, resAcceptOrder, resDashCharts } = require('../controller/restaurant')
 const { isRestuAuth } = require('../middleware/userAuth')
 const router = express.Router()
 
@@ -24,5 +24,7 @@ router.route('/restaurant/categories').get(isRestuAuth, getCategories)
 
 router.route('/restaurant/neworders').get(isRestuAuth, getResNewOrder)
 router.route('/restaurant/accept/:ordId').get(isRestuAuth, resAcceptOrder)
+
+router.route('/restaurant/deshboard/charts').get(isRestuAuth, resDashCharts)
 
 module.exports = router
