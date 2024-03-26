@@ -193,7 +193,7 @@ exports.loadUser = async (req, res) => {
 
 exports.getNearestRes = async (req, res) => {
   try {
-    const { longitude, latitude } = req.body;
+    const { longitude, latitude, price, category, veg } = req.body;
 
     if (!longitude || !latitude) {
       return res.status(404).json({
@@ -201,18 +201,260 @@ exports.getNearestRes = async (req, res) => {
         message: "Don't have your loaction",
       });
     }
+    let restus = []
+    if(category && price && veg){
+      console.log("alll")
+      restus = await Restaurant.aggregate([
+        {
+          $geoNear: {
+            near: {
+              type: "Point",
+              coordinates: [longitude, latitude],
+            },
+            distanceField: "distance",
+            maxDistance: 15000,
+            spherical: true,
+          },
+        },
+        {
+          $match: {
+            isVerify: true,
+          }
+        },
+        {
+          $sort: {
+            distance: 1,
+          },
+        },
+        {
+          $lookup: {
+            from: "foods",
+            localField: "foodList",
+            foreignField: "_id",
+            as: "foodList" 
+          }
+        },
+        {
+          $match: {
+            "foodList.foodType": veg,
+            "foodList.foodPrice": {
+              $lte: Number(price)
+            }
+          }
+        },
+        {
+          $lookup: {
+            from: "categories",
+            localField: "resCategory",
+            foreignField: "_id",
+            as: "resCategory" 
+          }
+        },
+        {
+          $match:{
+            "resCategory.type": category,
+          }
+        },
+        {
+          $project: {
+            password: 0,
+          },
+        },
+      ]);
+    } else if (category){
+      console.log("innn", category)
+      restus = await Restaurant.aggregate([
+        {
+          $geoNear: {
+            near: {
+              type: "Point",
+              coordinates: [longitude, latitude],
+            },
+            distanceField: "distance",
+            maxDistance: 15000,
+            spherical: true,
+          },
+        },
+        {
+          $match: {
+            isVerify: true,
+          }
+        },
+        {
+          $sort: {
+            distance: 1,
+          },
+        },
+        {
+          $lookup: {
+            from: "foods",
+            localField: "foodList",
+            foreignField: "_id",
+            as: "foodList" 
+          }
+        },
+        {
+          $lookup: {
+            from: "categories",
+            localField: "resCategory",
+            foreignField: "_id",
+            as: "resCategory" 
+          }
+        },
+        {
+          $match : {
+            "resCategory.type": category
+          }
+        },
+        {
+          $project: {
+            password: 0,
+          },
+        },
+      ]);
+    } else if(price){
+      console.log("in price")
+      restus = await Restaurant.aggregate([
+        {
+          $geoNear: {
+            near: {
+              type: "Point",
+              coordinates: [longitude, latitude],
+            },
+            distanceField: "distance",
+            maxDistance: 15000,
+            spherical: true,
+          },
+        },
+        {
+          $match: {
+            isVerify: true,
+          }
+        },
+        {
+          $sort: {
+            distance: 1,
+          },
+        },
+        {
+          $lookup: {
+            from: "foods",
+            localField: "foodList",
+            foreignField: "_id",
+            as: "foodList" 
+          }
+        },
+        {
+          $match: {
+            "foodList.foodPrice": {
+              $lt: Number(price)
+            }
+          }
+        },
+        {
+          $lookup: {
+            from: "categories",
+            localField: "resCategory",
+            foreignField: "_id",
+            as: "resCategory" 
+          }
+        },
+        {
+          $project: {
+            password: 0,
+          },
+        },
+      ]);
+    } else if(veg){
+      console.log(veg, "inVeg")
+      restus = await Restaurant.aggregate([
+        {
+          $geoNear: {
+            near: {
+              type: "Point",
+              coordinates: [longitude, latitude],
+            },
+            distanceField: "distance",
+            maxDistance: 15000,
+            spherical: true,
+          },
+        },
+        {
+          $match: {
+            isVerify: true,
+          }
+        },
+        {
+          $sort: {
+            distance: 1,
+          },
+        },
+        {
+          $lookup: {
+            from: "foods",
+            localField: "foodList",
+            foreignField: "_id",
+            as: "foodList" 
+          }
+        },
+        {
+          $match: {
+            "foodList.foodType": veg
+          }
+        },
+        {
+          $lookup: {
+            from: "categories",
+            localField: "resCategory",
+            foreignField: "_id",
+            as: "resCategory" 
+          }
+        },
+        {
+          $project: {
+            password: 0,
+          },
+        },
+      ]);
+    } else {
+      restus = await Restaurant.aggregate([
+        {
+          $geoNear: {
+            near: {
+              type: "Point",
+              coordinates: [longitude, latitude],
+            },
+            distanceField: "distance",
+            maxDistance: 15000,
+            spherical: true,
+          },
+        },
+        {
+          $match: {
+            isVerify: true,
+          }
+        },
+        {
+          $sort: {
+            distance: 1,
+          },
+        },
+        {
+          $lookup: {
+            from: "categories",
+            localField: "resCategory",
+            foreignField: "_id",
+            as: "resCategory" 
+          }
+        },
+        {
+          $project: {
+            password: 0,
+          },
+        },
+      ]);
+    }
 
-    // const restus = await Restaurant.find({
-    //   resLatLong: {
-    //     $near: {
-    //       $geometry: {
-    //         type: "Point",
-    //         coordinates: [longitude, latitude],
-    //       },
-    //       $maxDistance: 15000,
-    //     },
-    //   },
-    // }).populate("resCategory");
 
     // const restus = await Restaurant.aggregate([
     //   {
@@ -227,18 +469,104 @@ exports.getNearestRes = async (req, res) => {
     //     },
     //   },
     //   {
+    //     $match: {
+    //       isVerify: true,
+    //     }
+    //   },
+    //   {
     //     $sort: {
     //       distance: 1,
     //     },
     //   },
-    // ]).lookup({
-    //   from: "resCategories",
-    //   localField: "resCategory",
-    //   foreignField: "_id",
-    //   as: "resCategory",
-    // });
+    //   {
+    //     $lookup: {
+    //       from: "foods",
+    //       localField: "foodList",
+    //       foreignField: "_id",
+    //       as: "foodList" 
+    //     }
+    //   },
+    //   {
+    //     $match: {
+    //       "foodList.foodName": "Pizza"
+    //     }
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "categories",
+    //       localField: "resCategory",
+    //       foreignField: "_id",
+    //       as: "resCategory" 
+    //     }
+    //   },
+    //   {
+    //     $project: {
+    //       password: 0,
+    //     },
+    //   },
+    // ]);
 
-    const restus = await Restaurant.aggregate([
+
+    // console.log(restus[0].foodList[0].foodCategory)
+    // const restus = await Restaurant.find({
+    //   "resLatLong.coordinates": {
+    //     $near: {
+    //       $geometry: {
+    //         type: "Point",
+    //         coordinates: [longitude,latitude],
+    //       },
+    //       $maxDistance: 15000,
+    //     },
+    //   },
+    //   isVerify: { $eq: true },
+    // }).populate({path: "foodList", select: "foodCategory price"}).populate("resCategory")
+
+    // let sendRestu = []
+    
+    // for(let i=0; i<restus.length; i++){
+    //   for(let j=0; j<restus[i].foodList.length; j++){
+    //     if(restus[i].foodList[j].foodCategory.toString() === "658308fba919da2ef7a00256"){
+    //       const resIndex = sendRestu.findIndex((obj)=>obj._id.toString() === restus[i]._id.toString())
+    //       if(resIndex === -1){
+    //         sendRestu.push(restus[i])
+    //       }
+    //     }
+    //   }
+    // }
+
+    return res.status(200).json({
+      success: true,
+      restus,
+    });
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.getSearchNearestRes = async (req, res) => {
+  try {
+
+    const { longitude, latitude, search } = req.body;
+
+    if (!longitude || !latitude) {
+      return res.status(404).json({
+        success: false,
+        message: "Don't have your loaction",
+      });
+    }
+
+    if(!search){
+      return res.status(404).json({
+        success: false,
+        message: "Don't have Search Input",
+      });
+    }
+
+    const  restus = await Restaurant.aggregate([
       {
         $geoNear: {
           near: {
@@ -252,7 +580,11 @@ exports.getNearestRes = async (req, res) => {
       },
       {
         $match: {
-          isVerify: true 
+          isVerify: true,
+          resName: {
+            $regex : search,
+            $options: "i" 
+          }
         }
       },
       {
@@ -262,11 +594,11 @@ exports.getNearestRes = async (req, res) => {
       },
       {
         $lookup: {
-          from: "resCategories",
+          from: "categories",
           localField: "resCategory",
           foreignField: "_id",
-          as: "resCategory",
-        },
+          as: "resCategory" 
+        }
       },
       {
         $project: {
@@ -274,14 +606,12 @@ exports.getNearestRes = async (req, res) => {
         },
       },
     ]);
-
-    const filters = await Filter.find()
-
+    
     return res.status(200).json({
       success: true,
       restus,
-      filters
     });
+    
   } catch (error) {
     console.log("Catch Error:: ", error);
     return res.status(500).json({
@@ -289,7 +619,59 @@ exports.getNearestRes = async (req, res) => {
       message: error.message,
     });
   }
-};
+}
+
+exports.getSearcDishhNearestRes = async (req, res) => {
+  try {
+
+    const { longitude, latitude, search } = req.body;
+
+    if (!longitude || !latitude) {
+      return res.status(404).json({
+        success: false,
+        message: "Don't have your loaction",
+      });
+    }
+
+    if(!search){
+      return res.status(404).json({
+        success: false,
+        message: "Don't have Search Input",
+      });
+    }
+
+    const restaurants = await Restaurant.find({
+      "resLatLong.coordinates": {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: [longitude, latitude] // Your coordinates here
+          },
+          $maxDistance: 15000 // 15 km in meters
+        }
+      }
+    }).select('_id');
+    
+    console.log(restaurants)
+
+    const foods = await Food.find({
+      foodRestaurant: { $in: restaurants.map(restaurant => restaurant._id) }, // Filtering based on restaurants within 15km
+      foodName: { $regex: search, $options: "i" } // Additional filtering based on food name
+    });
+
+    return res.status(200).json({
+      success: true,
+      foods
+    });
+
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
 
 exports.getResFood = async (req, res) => {
   try {
@@ -685,3 +1067,22 @@ exports.getMyActiveOrder = async (req, res) => {
     });
   }
 };
+
+exports.getAllFilters = async (req, res) => {
+  try {
+    
+    const filters = await Filter.find();
+
+    return res.status(200).json({
+      success: true,
+      filters
+    })
+
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}

@@ -1,5 +1,5 @@
 const express = require('express')
-const { userLogin, userSignUp, userOtpVerify, loadUser, getNearestRes, getResFood, addToCart, removeFromCart, increaseQutOfCartFood, decreaseQutOfCartFood, getMyCartDetail, addOrRemoveFoodInSave, getMySaveFoods, getMyOrderHistory, getMyActiveOrder,  } = require('../controller/user')
+const { userLogin, userSignUp, userOtpVerify, loadUser, getNearestRes, getResFood, addToCart, removeFromCart, increaseQutOfCartFood, decreaseQutOfCartFood, getMyCartDetail, addOrRemoveFoodInSave, getMySaveFoods, getMyOrderHistory, getMyActiveOrder, getAllFilters, getSearchNearestRes, getSearcDishhNearestRes,  } = require('../controller/user')
 const { isUserAuth } = require('../middleware/userAuth.js')
 const router = express.Router()
 
@@ -9,6 +9,8 @@ router.route('/user/login').post(userLogin)
 router.route('/user/me').get(isUserAuth, loadUser)
 
 router.route('/user/nearestrestu').post(getNearestRes)
+router.route('/user/nearestrestu/search/res').post(getSearchNearestRes)
+router.route('/user/nearestrestu/search/dish').post(getSearcDishhNearestRes)
 router.route('/user/rest/foods/:resId').get(getResFood)
 
 router.route('/user/my/cart').get(isUserAuth, getMyCartDetail)
@@ -23,5 +25,7 @@ router.route('/user/my/save').get(isUserAuth, getMySaveFoods)
 router.route('/user/my/order/history').get(isUserAuth, getMyOrderHistory)
 router.route('/user/my/order/active').get(isUserAuth, getMyActiveOrder)
 router.route('/user/my/order/active').get(isUserAuth, getMyActiveOrder)
+
+router.route('/user/all/filters').get(getAllFilters)
 
 module.exports = router
