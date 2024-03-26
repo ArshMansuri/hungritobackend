@@ -172,14 +172,18 @@ exports.createOnlineOrder = async (req, res) => {
     user.cart = {};
     await user.save();
 
-    const admin = await Admin.findOne({email: "admin@gmail.com"})
+    const admin = await Admin.findOne({email: "admin@gmail.com"}) 
     if(!admin){
       return res.status(400).json({
         success: false,
         message: "There is isuue",
       });
     }
-    admin.money += order?.orders?.total
+    console.log(admin)
+    console.log(admin.username)
+    console.log(admin.money)
+    console.log(order?.orders?.total)
+    admin.money += order?.orders?.total || 1000
     await admin.save()
     
     return res.status(201).json({

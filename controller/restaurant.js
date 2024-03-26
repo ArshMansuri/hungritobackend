@@ -11,6 +11,7 @@ const {
   picChartPercentage,
 } = require("../utils/helper/helper");
 const Food = require("../model/Food");
+const Admin = require("../model/Admin");
 
 exports.resFirstSignUp = async (req, res) => {
   try {
@@ -512,6 +513,9 @@ exports.getResNewOrder = async (req, res) => {
     const orders = await Order.find({
       "orders.restu.resId": req.restu._id,
       "orders.restu.resStatus": "pending",
+      "status": {
+         $nin: ["cancel by user", "cancel by res"] 
+      }
     })
       .populate({ path: "orders.restu.foods.foodId", select: "foodWeight" })
       .populate({ path: "userId", select: "username" })
@@ -609,7 +613,7 @@ exports.resAcceptOrder = async (req, res) => {
         money: { $gt: 199 },
       });
 
-      console.log(delBoy)
+      // console.log(delBoy)
 
       if (delBoy && delBoy?.isAvilable === true && delBoy?.active === true) {
         order.deliveryBoyId = delBoy._id;
@@ -664,6 +668,59 @@ exports.resAcceptOrder = async (req, res) => {
     });
   }
 };
+
+exports.resCancelOrder = async(req, res)=>{
+  try {
+    const {ordId} = req.params
+
+    if(!ordId){
+      return res.status(400).json({
+        success: false,
+        message: "ord id not have",
+      });
+    }
+
+    const order = await Order.findById(ordId)
+
+    if(!order){
+      return res.status(400).json({
+        success: false,
+        message: "Order Not Found",
+      });
+    }
+
+    if(order.status === "new"){
+      const admin = await Admin.findOne({email: "admin@gmail.com"})
+      if(!admin){
+        return res.status(400).json({
+          success: false,
+          message: "There is isuue",
+        });
+      }
+      admin.money -= order?.orders?.total
+      await admin.save()
+      order.status = "cancel by res"
+      await order.save()
+      return res.status(200).json({
+        success: true,
+        message: "Order Deleted",
+      });
+
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Order Accepted So You Can't Cancel",
+      });
+    }
+
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
 
 exports.resDashCharts = async (req, res) => {
   try {

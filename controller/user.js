@@ -5,6 +5,7 @@ const { sendOtp } = require("../utils/sendOtp");
 const cloudinary = require("cloudinary");
 const Order = require("../model/Order");
 const Filter = require("../model/Filter");
+const Admin = require("../model/Admin");
 
 exports.userSignUp = async (req, res) => {
   try {
@@ -1067,6 +1068,59 @@ exports.getMyActiveOrder = async (req, res) => {
     });
   }
 };
+
+exports.userCancelOrder = async(req, res)=>{
+  try {
+    const {ordId} = req.params
+
+    if(!ordId){
+      return res.status(400).json({
+        success: false,
+        message: "ord id not have",
+      });
+    }
+
+    const order = await Order.findById(ordId)
+
+    if(!order){
+      return res.status(400).json({
+        success: false,
+        message: "Order Not Found",
+      });
+    }
+
+    if(order.status === "new"){
+      const admin = await Admin.findOne({email: "admin@gmail.com"})
+      if(!admin){
+        return res.status(400).json({
+          success: false,
+          message: "There is isuue",
+        });
+      }
+      admin.money -= order?.orders?.total
+      await admin.save()
+      order.status = "cancel by user"
+      await order.save()
+      return res.status(200).json({
+        success: true,
+        message: "Order Deleted",
+      });
+
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Order Accepted So You Can't Cancel",
+      });
+    }
+
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
 
 exports.getAllFilters = async (req, res) => {
   try {
