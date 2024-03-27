@@ -1,10 +1,11 @@
 const express = require('express')
-const { resFirstSignUp, resEmailVerify, resPrimarySignUp, resPhoneMakeOtp, resPhoneVerify, resOwnerPhoneMakeOtp, resOwnerPhoneVerify, resSecondaySignUp, resLastSignUp, resLogin, loadRes, getResType, getCategories, getResNewOrder, resAcceptOrder, resDashCharts, resCancelOrder } = require('../controller/restaurant')
+const { resFirstSignUp, resEmailVerify, resPrimarySignUp, resPhoneMakeOtp, resPhoneVerify, resOwnerPhoneMakeOtp, resOwnerPhoneVerify, resSecondaySignUp, resLastSignUp, resLogin, loadRes, getResType, getCategories, getResNewOrder, resAcceptOrder, resDashCharts, resCancelOrder, getResOrderList, resLogout } = require('../controller/restaurant')
 const { isRestuAuth } = require('../middleware/userAuth')
 const router = express.Router()
 
 router.route('/restaurant/me').get(isRestuAuth, loadRes)
 router.route('/restaurant/login').post(resLogin)
+router.route('/restaurant/logout').get(isRestuAuth, resLogout)
 router.route('/restaurant/fisrt/signup').post(resFirstSignUp)
 router.route('/restaurant/restuemail/verify').post(isRestuAuth, resEmailVerify)
 
@@ -22,6 +23,7 @@ router.route('/restaurant/last/signup').post(isRestuAuth, resLastSignUp)
 router.route('/restaurant/restypes').get(isRestuAuth, getResType)
 router.route('/restaurant/categories').get(isRestuAuth, getCategories)
 
+router.route('/restaurant/order/list').get(isRestuAuth, getResOrderList)
 router.route('/restaurant/neworders').get(isRestuAuth, getResNewOrder)
 router.route('/restaurant/accept/:ordId').get(isRestuAuth, resAcceptOrder)
 router.route('/restaurant/reject/:ordId').delete(isRestuAuth, resCancelOrder)

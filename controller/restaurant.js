@@ -469,6 +469,26 @@ exports.resLogin = async (req, res) => {
   }
 };
 
+exports.resLogout = async (req, res) => {
+  try {
+    return res.status(200).cookie("restoken", null, {
+      httpOnly: true,
+      expires: new Date(Date.now()),
+      sameSite: "None",
+      secure: true,
+    }).json({
+      success: true,
+      message: "Logout Successfully"
+    })
+  } catch (error) {
+    console.log("Catch Error" + error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
 exports.loadRes = async (req, res) => {
   try {
     const restu = await Restaurant.findById(req.restu._id);
@@ -721,6 +741,50 @@ exports.resCancelOrder = async(req, res)=>{
     });
   }
 }
+
+exports.getResOrderList= async (req, res) => {
+  try {
+    const orders = await Order.find({
+      "orders.restu.resId": req.restu._id,
+    }).populate({ path: "orders.restu.foods.foodId", select: "foodWeight" }).populate({ path: "userId", select: "username" }).sort({ creatdAt: -1 });
+
+    let sendOrders = [];
+    let index = 0;
+    for (let i = 0; i < orders?.length; i++) {
+      for (let j = 0; j < orders[i]?.orders?.restu.length; j++) {
+        if (
+          orders[i]?.orders?.restu[j].resId.toString() ===
+            req.restu._id.toString() 
+        ) {
+          // sendOrders[index] = orders[i];
+          // sendOrders[index].orders.restu = orders[i]?.orders?.restu[j];
+          sendOrders[index] = {
+            username:  orders[i]?.userId?.username,
+            orderTokne: orders[i]?.OrderTokne,
+            resSubTotal: orders[i]?.orders?.restu[j]?.resSubTotal,
+            _id: orders[i]._id,
+            payMode: orders[i]?.payMode,
+            isView: orders[i]?.status === "res accept" ? true : false
+          }
+          index++;
+        }
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      orders: sendOrders,
+    })
+
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
 
 exports.resDashCharts = async (req, res) => {
   try {
@@ -1031,3 +1095,5 @@ exports.resDashCharts = async (req, res) => {
     });
   }
 };
+
+

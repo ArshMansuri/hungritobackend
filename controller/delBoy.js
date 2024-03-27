@@ -10,7 +10,8 @@ exports.dbFirstSignUp = async (req, res) => {
     const { dbEmail } = req.body;
 
     const dBoy = await DelBoy.findOne({ "dbEmail.email": dbEmail });
-    if (dBoy) {
+
+    if (dBoy?.dbEmail?.isVerify === true) {
       return res.status(500).json({
         success: false,
         message: "Email Already Used",
@@ -345,6 +346,27 @@ exports.dbLogin = async (req, res) => {
     });
   }
 };
+
+exports.dbLogout = async (req, res) => {
+  try {
+    return res.status(200).cookie("delboytoken", null, {
+      httpOnly: true,
+      expires: new Date(Date.now()),
+      sameSite: "None",
+      secure: true,
+    }).json({
+      success: true,
+      message: "Logout Successfully"
+    })
+  } catch (error) {
+    console.log("Catch Error" + error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
 
 exports.loadDb = async (req, res) => {
   try {
@@ -869,6 +891,7 @@ exports.dbDashCharts = async (req, res) => {
       areaChart.push(order.length);
     }
 
+    console.log("return")
     return res.status(200).json({
       success: true,
       topTwoCart,
