@@ -26,6 +26,7 @@ exports.adminLogin = async (req, res) => {
       });
     }
 
+
     if (!admin.isActive) {
       return res.status(400).json({
         success: false,
@@ -70,6 +71,27 @@ exports.adminLogin = async (req, res) => {
     });
   }
 };
+
+exports.adminLogout = async (req, res) => {
+  try {
+    return res.status(200).cookie("admintoken", null, {
+      httpOnly: true,
+      expires: new Date(Date.now()),
+      sameSite: "None",
+      secure: true,
+    }).json({
+      success: true,
+      message: "Logout Successfully"
+    })
+  } catch (error) {
+    console.log("Catch Error" + error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
 
 exports.loadAdmin = async (req, res) => {
   try {
@@ -362,7 +384,7 @@ exports.adminRejectRes = async (req, res) => {
 
     const {resId} = req.params
 
-    const restu = await Restaurant.findById(resId)
+    let restu = await Restaurant.findById({_id: resId})
 
     if(!restu && restu?.isVerify === true){
       return res.status(400).json({
@@ -371,7 +393,8 @@ exports.adminRejectRes = async (req, res) => {
       });
     }
 
-    await restu.remove()
+    restu = await Restaurant.deleteOne({_id: resId})
+    // await restu.remove()
 
     // send mail to restaurant
 
@@ -391,7 +414,9 @@ exports.adminRejectRes = async (req, res) => {
 
 exports.getAllNewDbList = async (req, res) => {
   try {
-    const delBoys = await DelBoy.find({isVerify: false}).select(
+    const delBoys = await DelBoy.find({isVerify: false, "dbImage.publicUrl": {
+      $ne: null
+    }}).select(
       "dbName dbCompletAddress.city money dbImage.publicUrl"
     );
 

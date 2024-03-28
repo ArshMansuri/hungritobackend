@@ -1,10 +1,11 @@
 const express = require("express")
-const { makeResPortal, adminLogin, makeAdmin, loadAdmin, getAllResList, resActiveInActive, getAllDbList, dbBannedUnBanned, getAllNewResList, getDetailNewRes, adminAcceptRes, adminRejectRes, getAllNewDbList, getDetailNewdb, adminRejectDb, adminAcceptDb, adminSendDbEarnMoney, adminReceiveResMoney, adminSendResEarnMoney, adminReceiveDbMoney, adminDashCharts, adminAddFilter } = require("../controller/admin")
+const { makeResPortal, adminLogin, makeAdmin, loadAdmin, getAllResList, resActiveInActive, getAllDbList, dbBannedUnBanned, getAllNewResList, getDetailNewRes, adminAcceptRes, adminRejectRes, getAllNewDbList, getDetailNewdb, adminRejectDb, adminAcceptDb, adminSendDbEarnMoney, adminReceiveResMoney, adminSendResEarnMoney, adminReceiveDbMoney, adminDashCharts, adminAddFilter, adminLogout } = require("../controller/admin")
 const { isAdminAuth } = require("../middleware/userAuth")
 const router = express.Router()
 
 router.route('/admin/me').get(isAdminAuth, loadAdmin)
 router.route('/admin/login').post(adminLogin)
+router.route('/admin/logout').get(isAdminAuth, adminLogout)
 router.route('/admin/signup').post(makeAdmin)
 
 router.route('/admin/create/resportal').post(isAdminAuth, makeResPortal)
