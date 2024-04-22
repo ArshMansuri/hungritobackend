@@ -15,7 +15,7 @@ const delBoy = require('./routes/delBoy')
 const cookiParser = require('cookie-parser')
 const cloudinary = require("cloudinary")
 const socketIo = require('socket.io');
-
+const {firebase} = require("./firebase/index")
 
 //================== MiddelWers =====================================
 const corsOptions = {
@@ -146,6 +146,24 @@ io.on('connection', (socket)=>{
 // }
 
 // abc()
+
+async function sendNotification(){
+  try {
+    await firebase.messaging().send({
+        token: "ds8Ebiw6RJ4ada5rr3LPBj:APA91bH1t-EMSJ_BbTqE6cR4EOXj8d8HzJAVNUHRu5NRvcS_-wyA7iiWsgJzcsfjl6yF2S5w5Ft9bCyHIHr53VdLw0s-GPKOfX5mr1A3sIo2bDDDGGOfEpjZUwL4n137_zaF9ZSlsSyk",
+        notification:{
+            title: "Backenddddd",
+            body: "Testing mode"
+        }
+    })
+    console.log("noti send")
+  } catch (error) {
+    console.log("noti error", error)
+  }
+}
+setTimeout(()=>{
+    // sendNotification()
+}, 2000)
 
 
 

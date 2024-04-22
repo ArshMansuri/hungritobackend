@@ -90,6 +90,8 @@ const UserSchema = mongoose.Schema({
         ref: "Food"
     }],
 
+    notiToken: String,
+
     token: {
         type: Number,
         default: 0

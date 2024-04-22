@@ -1,5 +1,5 @@
 const express = require("express")
-const { makeResPortal, adminLogin, makeAdmin, loadAdmin, getAllResList, resActiveInActive, getAllDbList, dbBannedUnBanned, getAllNewResList, getDetailNewRes, adminAcceptRes, adminRejectRes, getAllNewDbList, getDetailNewdb, adminRejectDb, adminAcceptDb, adminSendDbEarnMoney, adminReceiveResMoney, adminSendResEarnMoney, adminReceiveDbMoney, adminDashCharts, adminAddFilter, adminLogout, getAllUsersList, getReturnPaymentOrdersList, adminReturnOrderPayment } = require("../controller/admin")
+const { makeResPortal, adminLogin, makeAdmin, loadAdmin, getAllResList, resActiveInActive, getAllDbList, dbBannedUnBanned, getAllNewResList, getDetailNewRes, adminAcceptRes, adminRejectRes, getAllNewDbList, getDetailNewdb, adminRejectDb, adminAcceptDb, adminSendDbEarnMoney, adminReceiveResMoney, adminSendResEarnMoney, adminReceiveDbMoney, adminDashCharts, adminAddFilter, adminLogout, getAllUsersList, getReturnPaymentOrdersList, adminReturnOrderPayment, adminSendNotificationToUser } = require("../controller/admin")
 const { isAdminAuth } = require("../middleware/userAuth")
 const router = express.Router()
 
@@ -35,6 +35,8 @@ router.route('/admin/receive/db/money/:dbId').post(isAdminAuth, adminReceiveDbMo
 router.route('/admin/user/list').get(isAdminAuth, getAllUsersList)
 router.route('/admin/return/payment/order/list').get(isAdminAuth, getReturnPaymentOrdersList)
 router.route('/admin/return/user/payment').post(isAdminAuth, adminReturnOrderPayment)
+
+router.route('/admin/send/user/notification').post(isAdminAuth, adminSendNotificationToUser)
 
 router.route('/admin/deshboard/charts').get(isAdminAuth, adminDashCharts)
 

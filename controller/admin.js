@@ -6,6 +6,7 @@ const { calculatePercentage, picChartPercentage } = require("../utils/helper/hel
 const Order = require("../model/Order");
 const User = require("../model/User");
 const Filter = require("../model/Filter");
+const { firebase } = require("../firebase/index")
 
 exports.adminLogin = async (req, res) => {
   try {
@@ -876,6 +877,57 @@ exports.adminAddFilter = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Filter Created"
+    })
+
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
+exports.adminSendNotificationToUser = async (req, res) => {
+  try {
+    const {tital, body} = req.body
+    
+    if(!tital || !body){
+      return res.status(400).json({
+        success: false,
+        message: "Enter All detail",
+      });
+    }
+    let tempTital = tital
+    let tempBody = body
+
+    const users = await User.find({notiTokne: {
+      $ne: "not allow"
+    }})
+
+    for(let i=0; i<users?.length; i++){
+      if(users[i]?.notiTokne !== undefined || users[i]?.notiTokne !== "not allow"){
+        if(tital.includes("<<username>>")){
+          tempTital = tital.replace("<<username>>", users[i]?.username)
+        }
+        if(body.includes("<<username>>")){
+          tempBody = body.replace("<<username>>", users[i]?.username)
+        }
+
+        await firebase.messaging().send({
+          token: users[i].notiToken,
+          notification:{
+              title: tempTital,
+              body: tempBody
+          }
+        })
+
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Notification send successfully"
     })
 
   } catch (error) {

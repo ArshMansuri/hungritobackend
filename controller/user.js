@@ -9,7 +9,7 @@ const Admin = require("../model/Admin");
 
 exports.userSignUp = async (req, res) => {
   try {
-    const { username, phone, password, img } = req.body;
+    const { username, phone, password, img, notiToken } = req.body;
 
     if (!username || !phone || !password) {
       return res
@@ -33,6 +33,10 @@ exports.userSignUp = async (req, res) => {
       otp_expired: otp_expired,
     };
 
+    if(!notiToken){
+      notiToken = "not allow"
+    }
+
     let newUser = {};
     if (img) {
       const myCloud = await cloudinary.v2.uploader.upload(img, {
@@ -44,12 +48,14 @@ exports.userSignUp = async (req, res) => {
         phone: phoneObj,
         password,
         profilImg,
+        notiToken
       });
     } else {
       newUser = await User.create({
         username,
         phone: phoneObj,
         password,
+        notiToken
       });
     }
 
@@ -78,7 +84,7 @@ exports.userSignUp = async (req, res) => {
 
 exports.userLogin = async (req, res) => {
   try {
-    const { phone, password } = req.body;
+    const { phone, password, notiToken } = req.body;
 
     if (!phone || !password) {
       return res
@@ -86,9 +92,8 @@ exports.userLogin = async (req, res) => {
         .json({ success: false, message: "Enter All Fild" });
     }
 
-    const user = await User.findOne({ "phone.phone": phone }).select(
-      "+password"
-    );
+
+    let user = await User.findOne({ "phone.phone": phone }).select("+password");
 
     if (!user || user.phone.isVerify === false) {
       return res
@@ -108,6 +113,13 @@ exports.userLogin = async (req, res) => {
 
     let sendUser = user;
     sendUser.password = "";
+
+    if(!notiToken){
+      notiToken = "not allow"
+    }
+    let tempUser = await User.findById(user._id)
+    tempUser.notiToken = notiToken
+    await tempUser.save()
 
     return res
       .status(200)
