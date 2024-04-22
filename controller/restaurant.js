@@ -78,7 +78,7 @@ exports.resEmailVerify = async (req, res) => {
   try {
     const { otp } = req.body;
     if (!otp) {
-      return res.status(400).json({ message: "Enter OPT" });
+      return res.status(400).json({ message: "Enter OTP" });
     }
 
     const restu = await Restaurant.findById(req.restu._id);
@@ -426,11 +426,11 @@ exports.resLogin = async (req, res) => {
     if (!restu) {
       return res.status(400).json({
         success: false,
-        message: "Invalide Details a",
+        message: "Invalide Details",
       });
     }
 
-    if (restu.isVerify === false || restu.active === false) {
+    if (restu.isVerify === false) {
       return res.status(400).json({
         success: false,
         message: "Invalide Details",
@@ -710,15 +710,17 @@ exports.resCancelOrder = async(req, res)=>{
     }
 
     if(order.status === "new"){
-      const admin = await Admin.findOne({email: "admin@gmail.com"})
-      if(!admin){
-        return res.status(400).json({
-          success: false,
-          message: "There is isuue",
-        });
+      if(order.payMode !== "Online"){
+        const admin = await Admin.findOne({email: "admin@gmail.com"})
+        if(!admin){
+          return res.status(400).json({
+            success: false,
+            message: "There is isuue",
+          });
+        }
+        admin.money -= order?.orders?.total
+        await admin.save()
       }
-      admin.money -= order?.orders?.total
-      await admin.save()
       order.status = "cancel by res"
       await order.save()
       return res.status(200).json({
@@ -800,7 +802,10 @@ exports.resDashCharts = async (req, res) => {
     var previousYear =
       today.getMonth() === 0 ? today.getFullYear() - 1 : today.getFullYear();
     var previousDate = new Date(today);
-    previousDate.setDate(today.getDate() - 1);
+    // previousDate.setDate(today.getDate() - 1);
+    previousDate.setHours(0)
+    previousDate.setMinutes(0)
+    previousDate.setSeconds(0)
 
     const lastMonth = {
       start: new Date(previousYear, previousMonth, 1),
@@ -825,6 +830,9 @@ exports.resDashCharts = async (req, res) => {
 
     const todayOrder = await Order.find({
       "orders.restu.resId": req.restu._id,
+      status: {
+        $nin: ["cancel by user", "cancel by res"]
+      },
       creatdAt: {
         $gt: previousDate,
         $lt: today,
@@ -833,6 +841,9 @@ exports.resDashCharts = async (req, res) => {
 
     const lastOrder = await Order.find({
       "orders.restu.resId": req.restu._id,
+      status: {
+        $nin: ["cancel by user", "cancel by res"]
+      },
       creatdAt: {
         $gt: new Date(
           today.getFullYear(),
@@ -901,6 +912,9 @@ exports.resDashCharts = async (req, res) => {
 
     const thisMonthOrder = await Order.find({
       "orders.restu.resId": req.restu._id,
+      status: {
+        $nin: ["cancel by user", "cancel by res"]
+      },
       creatdAt: {
         $gt: thisMonth.start,
         $lt: thisMonth.end,
@@ -909,6 +923,9 @@ exports.resDashCharts = async (req, res) => {
 
     const lastMonthOrder = await Order.find({
       "orders.restu.resId": req.restu._id,
+      status: {
+        $nin: ["cancel by user", "cancel by res"]
+      },
       creatdAt: {
         $gt: lastMonth.start,
         $lt: lastMonth.end,
@@ -1019,6 +1036,9 @@ exports.resDashCharts = async (req, res) => {
     for (let i = 0; i < orderedDays.length; i++) {
       const order = await Order.find({
         "orders.restu.resId": req.restu._id,
+        status: {
+          $nin: ["cancel by user", "cancel by res"]
+        },
         creatdAt: {
           $gt: new Date(
             lastWeekDate[orderedDays[i]].getFullYear(),
@@ -1047,6 +1067,9 @@ exports.resDashCharts = async (req, res) => {
     const lastYearRevenue = new Array(12).fill(0)
     const thisYearOrder = await Order.find({
       "orders.restu.resId": req.restu._id,
+      status: {
+        $nin: ["cancel by user", "cancel by res"]
+      },
       creatdAt:{
         $gt: new Date(today.getFullYear(), 0, 1),
         $lt: today
@@ -1055,6 +1078,9 @@ exports.resDashCharts = async (req, res) => {
 
     const lastYearOrder = await Order.find({
       "orders.restu.resId": req.restu._id,
+      status: {
+        $nin: ["cancel by user", "cancel by res"]
+      },
       creatdAt:{
         $gt: new Date(today.getFullYear()-1, 0, 1),
         $lt: new Date(today.getFullYear(), 0, 1)

@@ -1,11 +1,12 @@
 const express = require('express')
-const { userLogin, userSignUp, userOtpVerify, loadUser, getNearestRes, getResFood, addToCart, removeFromCart, increaseQutOfCartFood, decreaseQutOfCartFood, getMyCartDetail, addOrRemoveFoodInSave, getMySaveFoods, getMyOrderHistory, getMyActiveOrder, getAllFilters, getSearchNearestRes, getSearcDishhNearestRes, userCancelOrder,  } = require('../controller/user')
+const { userLogin, userSignUp, userOtpVerify, loadUser, getNearestRes, getResFood, addToCart, removeFromCart, increaseQutOfCartFood, decreaseQutOfCartFood, getMyCartDetail, addOrRemoveFoodInSave, getMySaveFoods, getMyOrderHistory, getMyActiveOrder, getAllFilters, getSearchNearestRes, getSearcDishhNearestRes, userCancelOrder, userLogout,  } = require('../controller/user')
 const { isUserAuth } = require('../middleware/userAuth.js')
 const router = express.Router()
 
 router.route('/user/signUp').post(userSignUp)
 router.route('/user/signUp/verify').post(userOtpVerify)
 router.route('/user/login').post(userLogin)
+router.route('/user/logout').get(isUserAuth, userLogout)
 router.route('/user/me').get(isUserAuth, loadUser)
 
 router.route('/user/order/cancel/:ordId').delete(isUserAuth, userCancelOrder)
@@ -26,7 +27,7 @@ router.route('/user/addoremove/save/:foodId').get(isUserAuth, addOrRemoveFoodInS
 router.route('/user/my/save').get(isUserAuth, getMySaveFoods)
 router.route('/user/my/order/history').get(isUserAuth, getMyOrderHistory)
 router.route('/user/my/order/active').get(isUserAuth, getMyActiveOrder)
-router.route('/user/my/order/active').get(isUserAuth, getMyActiveOrder)
+// router.route('/user/my/order/active').get(isUserAuth, getMyActiveOrder)
 
 router.route('/user/all/filters').get(getAllFilters)
 

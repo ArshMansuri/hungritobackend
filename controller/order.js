@@ -32,7 +32,13 @@ exports.createCodOrder = async (req, res) => {
     const tempTotal = user.cart.total;
     let tempToken = 0;
     if (isToken) {
-      tempToken = user.token;
+      if(user.token < 50){
+        tempToken = user.token;
+        user.token = 0;
+      } else {
+        tempToken = 50;
+        user.token = (user.token - 50);
+      }
     }
 
     const orderObj = {
@@ -54,6 +60,7 @@ exports.createCodOrder = async (req, res) => {
       },
       payMode: "Cod",
       onlinePayTime: null,
+      isApplayToken: isToken
     };
     const order = await Order.create(orderObj);
 
@@ -130,7 +137,13 @@ exports.createOnlineOrder = async (req, res) => {
     const tempTotal = user.cart.total;
     let tempToken = 0;
     if (isToken) {
-      tempToken = user.token;
+      if(user.token < 50){
+        tempToken = user.token;
+        user.token = 0;
+      } else {
+        tempToken = 50;
+        user.token = (user.token - 50);
+      }
     }
     const orderObj = {
       userId: req.user._id,
@@ -153,6 +166,7 @@ exports.createOnlineOrder = async (req, res) => {
       payMode: "Online",
       isPay: true,
       paymentToken,
+      isApplayToken: isToken
     };
     const order = await Order.create(orderObj);
 

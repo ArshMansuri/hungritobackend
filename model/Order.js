@@ -88,6 +88,11 @@ const OrderSchema = mongoose.Schema({
         landMark: String
     },
 
+    isApplayToken: {
+        type: Boolean,
+        default: false
+    },
+
     payMode: String,
 
     isPay: {

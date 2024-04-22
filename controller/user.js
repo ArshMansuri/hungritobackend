@@ -130,6 +130,28 @@ exports.userLogin = async (req, res) => {
     });
   }
 };
+exports.userLogout = async (req, res) => {
+  try {
+    return res
+      .status(200)
+      .cookie("token", null, {
+        httpOnly: true,
+        expires: new Date(Date.now()),
+        sameSite: "None",
+        secure: true,
+      })
+      .json({
+        success: true,
+        message: "Logout Successfully",
+      });
+  } catch (error) {
+    console.log("Catch Error" + error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
 exports.userOtpVerify = async (req, res) => {
   try {
@@ -202,9 +224,9 @@ exports.getNearestRes = async (req, res) => {
         message: "Don't have your loaction",
       });
     }
-    let restus = []
-    if(category && price && veg){
-      console.log("alll")
+    let restus = [];
+    if (category && price && veg) {
+      console.log("alll");
       restus = await Restaurant.aggregate([
         {
           $geoNear: {
@@ -220,7 +242,7 @@ exports.getNearestRes = async (req, res) => {
         {
           $match: {
             isVerify: true,
-          }
+          },
         },
         {
           $sort: {
@@ -232,29 +254,29 @@ exports.getNearestRes = async (req, res) => {
             from: "foods",
             localField: "foodList",
             foreignField: "_id",
-            as: "foodList" 
-          }
+            as: "foodList",
+          },
         },
         {
           $match: {
             "foodList.foodType": veg,
             "foodList.foodPrice": {
-              $lte: Number(price)
-            }
-          }
+              $lte: Number(price),
+            },
+          },
         },
         {
           $lookup: {
             from: "categories",
             localField: "resCategory",
             foreignField: "_id",
-            as: "resCategory" 
-          }
+            as: "resCategory",
+          },
         },
         {
-          $match:{
+          $match: {
             "resCategory.type": category,
-          }
+          },
         },
         {
           $project: {
@@ -262,8 +284,8 @@ exports.getNearestRes = async (req, res) => {
           },
         },
       ]);
-    } else if (category){
-      console.log("innn", category)
+    } else if (category) {
+      console.log("innn", category);
       restus = await Restaurant.aggregate([
         {
           $geoNear: {
@@ -279,7 +301,7 @@ exports.getNearestRes = async (req, res) => {
         {
           $match: {
             isVerify: true,
-          }
+          },
         },
         {
           $sort: {
@@ -291,21 +313,21 @@ exports.getNearestRes = async (req, res) => {
             from: "foods",
             localField: "foodList",
             foreignField: "_id",
-            as: "foodList" 
-          }
+            as: "foodList",
+          },
         },
         {
           $lookup: {
             from: "categories",
             localField: "resCategory",
             foreignField: "_id",
-            as: "resCategory" 
-          }
+            as: "resCategory",
+          },
         },
         {
-          $match : {
-            "resCategory.type": category
-          }
+          $match: {
+            "resCategory.type": category,
+          },
         },
         {
           $project: {
@@ -313,8 +335,8 @@ exports.getNearestRes = async (req, res) => {
           },
         },
       ]);
-    } else if(price){
-      console.log("in price")
+    } else if (price) {
+      console.log("in price");
       restus = await Restaurant.aggregate([
         {
           $geoNear: {
@@ -330,7 +352,7 @@ exports.getNearestRes = async (req, res) => {
         {
           $match: {
             isVerify: true,
-          }
+          },
         },
         {
           $sort: {
@@ -342,23 +364,23 @@ exports.getNearestRes = async (req, res) => {
             from: "foods",
             localField: "foodList",
             foreignField: "_id",
-            as: "foodList" 
-          }
+            as: "foodList",
+          },
         },
         {
           $match: {
             "foodList.foodPrice": {
-              $lt: Number(price)
-            }
-          }
+              $lt: Number(price),
+            },
+          },
         },
         {
           $lookup: {
             from: "categories",
             localField: "resCategory",
             foreignField: "_id",
-            as: "resCategory" 
-          }
+            as: "resCategory",
+          },
         },
         {
           $project: {
@@ -366,8 +388,8 @@ exports.getNearestRes = async (req, res) => {
           },
         },
       ]);
-    } else if(veg){
-      console.log(veg, "inVeg")
+    } else if (veg) {
+      console.log(veg, "inVeg");
       restus = await Restaurant.aggregate([
         {
           $geoNear: {
@@ -383,7 +405,7 @@ exports.getNearestRes = async (req, res) => {
         {
           $match: {
             isVerify: true,
-          }
+          },
         },
         {
           $sort: {
@@ -395,21 +417,21 @@ exports.getNearestRes = async (req, res) => {
             from: "foods",
             localField: "foodList",
             foreignField: "_id",
-            as: "foodList" 
-          }
+            as: "foodList",
+          },
         },
         {
           $match: {
-            "foodList.foodType": veg
-          }
+            "foodList.foodType": veg,
+          },
         },
         {
           $lookup: {
             from: "categories",
             localField: "resCategory",
             foreignField: "_id",
-            as: "resCategory" 
-          }
+            as: "resCategory",
+          },
         },
         {
           $project: {
@@ -433,7 +455,7 @@ exports.getNearestRes = async (req, res) => {
         {
           $match: {
             isVerify: true,
-          }
+          },
         },
         {
           $sort: {
@@ -445,8 +467,8 @@ exports.getNearestRes = async (req, res) => {
             from: "categories",
             localField: "resCategory",
             foreignField: "_id",
-            as: "resCategory" 
-          }
+            as: "resCategory",
+          },
         },
         {
           $project: {
@@ -455,7 +477,6 @@ exports.getNearestRes = async (req, res) => {
         },
       ]);
     }
-
 
     // const restus = await Restaurant.aggregate([
     //   {
@@ -484,7 +505,7 @@ exports.getNearestRes = async (req, res) => {
     //       from: "foods",
     //       localField: "foodList",
     //       foreignField: "_id",
-    //       as: "foodList" 
+    //       as: "foodList"
     //     }
     //   },
     //   {
@@ -497,7 +518,7 @@ exports.getNearestRes = async (req, res) => {
     //       from: "categories",
     //       localField: "resCategory",
     //       foreignField: "_id",
-    //       as: "resCategory" 
+    //       as: "resCategory"
     //     }
     //   },
     //   {
@@ -506,7 +527,6 @@ exports.getNearestRes = async (req, res) => {
     //     },
     //   },
     // ]);
-
 
     // console.log(restus[0].foodList[0].foodCategory)
     // const restus = await Restaurant.find({
@@ -523,7 +543,7 @@ exports.getNearestRes = async (req, res) => {
     // }).populate({path: "foodList", select: "foodCategory price"}).populate("resCategory")
 
     // let sendRestu = []
-    
+
     // for(let i=0; i<restus.length; i++){
     //   for(let j=0; j<restus[i].foodList.length; j++){
     //     if(restus[i].foodList[j].foodCategory.toString() === "658308fba919da2ef7a00256"){
@@ -550,7 +570,6 @@ exports.getNearestRes = async (req, res) => {
 
 exports.getSearchNearestRes = async (req, res) => {
   try {
-
     const { longitude, latitude, search } = req.body;
 
     if (!longitude || !latitude) {
@@ -560,14 +579,14 @@ exports.getSearchNearestRes = async (req, res) => {
       });
     }
 
-    if(!search){
+    if (!search) {
       return res.status(404).json({
         success: false,
         message: "Don't have Search Input",
       });
     }
 
-    const  restus = await Restaurant.aggregate([
+    const restus = await Restaurant.aggregate([
       {
         $geoNear: {
           near: {
@@ -583,10 +602,10 @@ exports.getSearchNearestRes = async (req, res) => {
         $match: {
           isVerify: true,
           resName: {
-            $regex : search,
-            $options: "i" 
-          }
-        }
+            $regex: search,
+            $options: "i",
+          },
+        },
       },
       {
         $sort: {
@@ -598,8 +617,8 @@ exports.getSearchNearestRes = async (req, res) => {
           from: "categories",
           localField: "resCategory",
           foreignField: "_id",
-          as: "resCategory" 
-        }
+          as: "resCategory",
+        },
       },
       {
         $project: {
@@ -607,12 +626,11 @@ exports.getSearchNearestRes = async (req, res) => {
         },
       },
     ]);
-    
+
     return res.status(200).json({
       success: true,
       restus,
     });
-    
   } catch (error) {
     console.log("Catch Error:: ", error);
     return res.status(500).json({
@@ -620,11 +638,10 @@ exports.getSearchNearestRes = async (req, res) => {
       message: error.message,
     });
   }
-}
+};
 
 exports.getSearcDishhNearestRes = async (req, res) => {
   try {
-
     const { longitude, latitude, search } = req.body;
 
     if (!longitude || !latitude) {
@@ -634,7 +651,7 @@ exports.getSearcDishhNearestRes = async (req, res) => {
       });
     }
 
-    if(!search){
+    if (!search) {
       return res.status(404).json({
         success: false,
         message: "Don't have Search Input",
@@ -646,25 +663,24 @@ exports.getSearcDishhNearestRes = async (req, res) => {
         $near: {
           $geometry: {
             type: "Point",
-            coordinates: [longitude, latitude] // Your coordinates here
+            coordinates: [longitude, latitude], // Your coordinates here
           },
-          $maxDistance: 15000 // 15 km in meters
-        }
-      }
-    }).select('_id');
-    
-    console.log(restaurants)
+          $maxDistance: 15000, // 15 km in meters
+        },
+      },
+    }).select("_id");
+
+    console.log(restaurants);
 
     const foods = await Food.find({
-      foodRestaurant: { $in: restaurants.map(restaurant => restaurant._id) }, // Filtering based on restaurants within 15km
-      foodName: { $regex: search, $options: "i" } // Additional filtering based on food name
+      foodRestaurant: { $in: restaurants.map((restaurant) => restaurant._id) }, // Filtering based on restaurants within 15km
+      foodName: { $regex: search, $options: "i" }, // Additional filtering based on food name
     });
 
     return res.status(200).json({
       success: true,
-      foods
+      foods,
     });
-
   } catch (error) {
     console.log("Catch Error:: ", error);
     return res.status(500).json({
@@ -672,7 +688,7 @@ exports.getSearcDishhNearestRes = async (req, res) => {
       message: error.message,
     });
   }
-}
+};
 
 exports.getResFood = async (req, res) => {
   try {
@@ -1056,10 +1072,9 @@ exports.getMyActiveOrder = async (req, res) => {
     }).populate({ path: "orders.restu.foods.foodId", select: "foodWeight" });
 
     return res.status(200).json({
-      success: true, 
-      order
-    })
-
+      success: true,
+      order,
+    });
   } catch (error) {
     console.log("Catch Error:: ", error);
     return res.status(500).json({
@@ -1069,50 +1084,50 @@ exports.getMyActiveOrder = async (req, res) => {
   }
 };
 
-exports.userCancelOrder = async(req, res)=>{
+exports.userCancelOrder = async (req, res) => {
   try {
-    const {ordId} = req.params
+    const { ordId } = req.params;
 
-    if(!ordId){
+    if (!ordId) {
       return res.status(400).json({
         success: false,
         message: "ord id not have",
       });
     }
 
-    const order = await Order.findById(ordId)
+    const order = await Order.findById(ordId);
 
-    if(!order){
+    if (!order) {
       return res.status(400).json({
         success: false,
         message: "Order Not Found",
       });
     }
 
-    if(order.status === "new"){
-      const admin = await Admin.findOne({email: "admin@gmail.com"})
-      if(!admin){
-        return res.status(400).json({
-          success: false,
-          message: "There is isuue",
-        });
+    if (order.status === "new") {
+      if (order.payMode !== "Online") {
+        const admin = await Admin.findOne({ email: "admin@gmail.com" });
+        if (!admin) {
+          return res.status(400).json({
+            success: false,
+            message: "There is isuue",
+          });
+        }
+        admin.money -= order?.orders?.total;
+        await admin.save();
       }
-      admin.money -= order?.orders?.total
-      await admin.save()
-      order.status = "cancel by user"
-      await order.save()
+      order.status = "cancel by user";
+      await order.save();
       return res.status(200).json({
         success: true,
         message: "Order Deleted",
       });
-
     } else {
       return res.status(400).json({
         success: false,
         message: "Order Accepted So You Can't Cancel",
       });
     }
-
   } catch (error) {
     console.log("Catch Error:: ", error);
     return res.status(500).json({
@@ -1120,18 +1135,16 @@ exports.userCancelOrder = async(req, res)=>{
       message: error.message,
     });
   }
-}
+};
 
 exports.getAllFilters = async (req, res) => {
   try {
-    
     const filters = await Filter.find();
 
     return res.status(200).json({
       success: true,
-      filters
-    })
-
+      filters,
+    });
   } catch (error) {
     console.log("Catch Error:: ", error);
     return res.status(500).json({
@@ -1139,4 +1152,4 @@ exports.getAllFilters = async (req, res) => {
       message: error.message,
     });
   }
-}
+};

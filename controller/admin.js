@@ -299,7 +299,9 @@ exports.dbBannedUnBanned = async (req, res) => {
 
 exports.getAllNewResList = async (req, res) => {
   try {
-    const restus = await Restaurant.find({isVerify: false}).select(
+    const restus = await Restaurant.find({isVerify: false, "resFoodImage.publicUrl": {
+      $ne: null
+    }}).select(
       "resName resCompletAddress.city money"
     );
 
@@ -502,7 +504,7 @@ exports.adminRejectDb = async (req, res) => {
 
     const {dbId} = req.params
 
-    const delBoy = await DelBoy.findById(dbId)
+    let delBoy = await DelBoy.findById(dbId)
 
     if(!delBoy && delBoy?.isVerify === true){
       return res.status(400).json({
@@ -511,7 +513,10 @@ exports.adminRejectDb = async (req, res) => {
       });
     }
 
-    await delBoy.remove()
+    delBoy = await DelBoy.deleteOne({_id: dbId})
+
+
+    // await delBoy.remove()
 
     // send mail to restaurant
 
@@ -743,6 +748,108 @@ exports.adminReceiveDbMoney = async (req, res) => {
   }
 };
 
+exports.getAllUsersList = async (req, res) => {
+  try {
+    const users = await User.find()
+
+    return res.status(200).json({
+      users,
+      success: true
+    })
+
+
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
+exports.getReturnPaymentOrdersList = async (req, res) => {
+  try {
+
+    const orders = await Order.find({
+      status: {
+        $in: ["cancel by user", "cancel by res"],
+      },
+      payMode: "Online",
+      isPay: true
+    }).populate({path: "userId", select: "username profilImg phone.phone"}).select("OrderTokne orders.total")
+
+    return res.status(200).json({
+      orders,
+      success: true
+    })
+
+
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
+exports.adminReturnOrderPayment = async (req, res) => {
+  try {
+    const {ordId} = req.body
+
+    if(!ordId){
+      return res.status(400).json({
+        success: false,
+        message: "OrdId Not Available",
+      });
+    }
+
+    const admin = await Admin.findById(req.admin._id)
+    if(admin.email !== "admin@gmail.com"){
+      return res.status(400).json({
+        success: false,
+        message: "You Can't Update Money",
+      });
+    }
+
+    const order = await Order.findById(ordId)
+
+    if(!order){
+      return res.status(400).json({
+        success: false,
+        message: "Order Not Found",
+      });
+    }
+
+    if(order?.status === "cancel by user" || order?.status === "cancel by res"){
+      order.status = "payment returned"
+      admin.money -= order?.orders?.total
+
+      await order.save()
+      await admin.save()
+
+      return res.status(200).json({
+        success: true,
+        message: "Payment Return Successfully",
+      }); 
+
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Somthing Went Wrong",
+      });
+    }
+
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+
+
 exports.adminAddFilter = async (req, res) => {
   try {
 
@@ -794,7 +901,10 @@ exports.adminDashCharts = async (req, res) => {
     var previousYear =
       today.getMonth() === 0 ? today.getFullYear() - 1 : today.getFullYear();
     var previousDate = new Date(today);
-    previousDate.setDate(today.getDate() - 1);
+    // previousDate.setDate(today.getDate() - 1);
+    previousDate.setHours(0)
+    previousDate.setMinutes(0)
+    previousDate.setSeconds(0)
 
     const lastMonth = {
       start: new Date(previousYear, previousMonth, 1),
@@ -818,6 +928,9 @@ exports.adminDashCharts = async (req, res) => {
     }
 
     const todayOrder = await Order.find({
+      status: {
+        $nin: ["cancel by user", "cancel by res"]
+      },
       creatdAt: {
         $gt: previousDate,
         $lt: today,
@@ -825,6 +938,9 @@ exports.adminDashCharts = async (req, res) => {
     });
 
     const lastOrder = await Order.find({
+      status: {
+        $nin: ["cancel by user", "cancel by res"]
+      },
       creatdAt: {
         $gt: new Date(
           today.getFullYear(),
@@ -873,6 +989,9 @@ exports.adminDashCharts = async (req, res) => {
     }
 
     const thisMonthOrder = await Order.find({
+      status: {
+        $nin: ["cancel by user", "cancel by res"]
+      },
       creatdAt: {
         $gt: thisMonth.start,
         $lt: thisMonth.end,
@@ -880,6 +999,9 @@ exports.adminDashCharts = async (req, res) => {
     });
 
     const lastMonthOrder = await Order.find({
+      status: {
+        $nin: ["cancel by user", "cancel by res"]
+      },
       creatdAt: {
         $gt: lastMonth.start,
         $lt: lastMonth.end,
@@ -968,6 +1090,9 @@ exports.adminDashCharts = async (req, res) => {
     const weekRevenueChart = [];
     for (let i = 0; i < orderedDays.length; i++) {
       const order = await Order.find({
+        status: {
+          $nin: ["cancel by user", "cancel by res"]
+        },
         creatdAt: {
           $gt: new Date(
             lastWeekDate[orderedDays[i]].getFullYear(),
@@ -992,6 +1117,9 @@ exports.adminDashCharts = async (req, res) => {
     const thisYearRevenue = new Array(12).fill(0)
     const lastYearRevenue = new Array(12).fill(0)
     const thisYearOrder = await Order.find({
+      status: {
+        $nin: ["cancel by user", "cancel by res"]
+      },
       creatdAt:{
         $gt: new Date(today.getFullYear(), 0, 1),
         $lt: today
@@ -999,6 +1127,9 @@ exports.adminDashCharts = async (req, res) => {
     })
 
     const lastYearOrder = await Order.find({
+      status: {
+        $nin: ["cancel by user", "cancel by res"]
+      },
       creatdAt:{
         $gt: new Date(today.getFullYear()-1, 0, 1),
         $lt: new Date(today.getFullYear(), 0, 1)

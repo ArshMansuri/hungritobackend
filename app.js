@@ -86,7 +86,9 @@ function updateSocketId(map, userId, socketId) {
 io.on('connection', (socket)=>{
     socket.on('user-online', ({userId})=>{
         console.log(userId, socket.id, "user")
-        updateSocketId(onlineCustomers, userId, socket.id);
+        if(userId){
+            updateSocketId(onlineCustomers, userId, socket.id);
+        }
     })
 
     socket.on('deliveryBoy-online', ({dbId})=>{
