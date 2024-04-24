@@ -12,6 +12,8 @@ const {
 } = require("../utils/helper/helper");
 const Food = require("../model/Food");
 const Admin = require("../model/Admin");
+const crypto = require("crypto")
+
 
 exports.resFirstSignUp = async (req, res) => {
   try {
@@ -495,6 +497,94 @@ exports.loadRes = async (req, res) => {
     return res.status(200).json({ success: true, restu });
   } catch (error) {
     console.log("Catch Error" + error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.resForgotPasswordToken = async (req, res) => {
+  try {
+
+    const {email} = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Enter Email Address" });
+    }    
+
+    const restu = await Restaurant.findOne({"resEmail.email": email, "resEmail.isVerify": true});
+    if(!restu){
+      return res.status(400).json({ message: "Invalid Email Address" });
+    }
+
+    const resetToken = await restu.createForgotPassToken()
+
+    const subject = "HungriTo Forgot Password"
+
+    const text = `HungriTo Forgot Password Link, \n Link: https://hungrito-food.web.app/delboy/reset/password/link/${resetToken} \nif you don't send request for change password then ignore this`
+    sendMail(email, subject, text)    
+
+    await restu.save()
+    return res.status(200).json({ success: true, message: "Link Send Successfully" });
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.resResetPassLinkVerify = async (req, res) => {
+  try {
+
+    const {forgotPassToken} = req.body;
+
+    if (!forgotPassToken) {
+      return res.status(400).json({ message: "Not Have Token Or Password" });
+    }    
+
+    const tempToken = crypto.createHash("sha256").update(forgotPassToken).digest("hex")
+    console.log(tempToken)
+    const restu = await Restaurant.findOne({"forgotPassToken": tempToken, "forgotPassExpired": {$gt: Date.now()} ,"resEmail.isVerify": true})
+    if(!restu){
+      return res.status(400).json({ message: "Invalid Details Or Link Expired" });
+    }
+
+    return res.status(200).json({ success: true, message: "Link Is Correct" });
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.resResetPassByLink = async (req, res) => {
+  try {
+
+    const {forgotPassToken, password} = req.body;
+
+    if (!forgotPassToken || !password) {
+      return res.status(400).json({ message: "Not Have Token Or Password" });
+    }    
+
+    const tempToken = crypto.createHash("sha256").update(forgotPassToken).digest("hex")
+    const restu = await Restaurant.findOne({"forgotPassToken": tempToken, "forgotPassExpired": {$gt: Date.now()} ,"resEmail.isVerify": true})
+    if(!restu){
+      return res.status(400).json({ message: "Invalid Details Or Link Expired" });
+    }
+
+    restu.password = password
+    restu.forgotPassToken = null
+    restu.forgotPassExpired = null
+    await restu.save()
+
+    return res.status(200).json({ success: true, message: "Password Change Successfully" });
+  } catch (error) {
+    console.log("Catch Error:: ", error);
     return res.status(500).json({
       success: false,
       message: error.message,

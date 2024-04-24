@@ -4,6 +4,7 @@ const { picChartPercentage, calculatePercentage } = require("../utils/helper/hel
 const { sendMail } = require("../utils/sendMail");
 const { sendOtp } = require("../utils/sendOtp");
 const cloudinary = require("cloudinary");
+const crypto = require("crypto")
 
 exports.dbFirstSignUp = async (req, res) => {
   try {
@@ -367,7 +368,6 @@ exports.dbLogout = async (req, res) => {
   }
 }
 
-
 exports.loadDb = async (req, res) => {
   try {
     const delBoy = await DelBoy.findById(req.delBoy._id);
@@ -382,6 +382,93 @@ exports.loadDb = async (req, res) => {
     return res.status(200).json({ success: true, delBoy, userId });
   } catch (error) {
     console.log("Catch Error" + error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.dbForgotPasswordToken = async (req, res) => {
+  try {
+
+    const {email} = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Enter Email Address" });
+    }    
+
+    const delBoy = await DelBoy.findOne({"dbEmail.email": email, "dbEmail.isVerify": true});
+    if(!delBoy){
+      return res.status(400).json({ message: "Invalid Email Address" });
+    }
+
+    const resetToken = await delBoy.createForgotPassToken()
+
+    const subject = "HungriTo Forgot Password"
+
+    const text = `HungriTo Forgot Password Link, \n Link: https://hungrito-food.web.app/delboy/reset/password/link/${resetToken} \nif you don't send request for change password then ignore this`
+    sendMail(email, subject, text)    
+
+    await delBoy.save()
+    return res.status(200).json({ success: true, message: "Link Send Successfully" });
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.dbResetPassLinkVerify = async (req, res) => {
+  try {
+
+    const {forgotPassToken} = req.body;
+
+    if (!forgotPassToken) {
+      return res.status(400).json({ message: "Not Have Token Or Password" });
+    }    
+
+    const tempToken = crypto.createHash("sha256").update(forgotPassToken).digest("hex")
+    const delBoy = await DelBoy.findOne({"forgotPassToken": tempToken, "forgotPassExpired": {$gt: Date.now()} ,"dbEmail.isVerify": true})
+    if(!delBoy){
+      return res.status(400).json({ message: "Invalid Details Or Link Expired" });
+    }
+
+    return res.status(200).json({ success: true, message: "Link Is Correct" });
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.dbResetPassByLink = async (req, res) => {
+  try {
+
+    const {forgotPassToken, password} = req.body;
+
+    if (!forgotPassToken || !password) {
+      return res.status(400).json({ message: "Not Have Token Or Password" });
+    }    
+
+    const tempToken = crypto.createHash("sha256").update(forgotPassToken).digest("hex")
+    const delBoy = await DelBoy.findOne({"forgotPassToken": tempToken, "forgotPassExpired": {$gt: Date.now()} ,"dbEmail.isVerify": true})
+    if(!delBoy){
+      return res.status(400).json({ message: "Invalid Details Or Link Expired" });
+    }
+
+    delBoy.password = password
+    delBoy.forgotPassToken = null
+    delBoy.forgotPassExpired = null
+    await delBoy.save()
+
+    return res.status(200).json({ success: true, message: "Password Change Successfully" });
+  } catch (error) {
+    console.log("Catch Error:: ", error);
     return res.status(500).json({
       success: false,
       message: error.message,

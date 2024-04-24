@@ -1,5 +1,5 @@
 const express = require('express')
-const { resFirstSignUp, resEmailVerify, resPrimarySignUp, resPhoneMakeOtp, resPhoneVerify, resOwnerPhoneMakeOtp, resOwnerPhoneVerify, resSecondaySignUp, resLastSignUp, resLogin, loadRes, getResType, getCategories, getResNewOrder, resAcceptOrder, resDashCharts, resCancelOrder, getResOrderList, resLogout } = require('../controller/restaurant')
+const { resFirstSignUp, resEmailVerify, resPrimarySignUp, resPhoneMakeOtp, resPhoneVerify, resOwnerPhoneMakeOtp, resOwnerPhoneVerify, resSecondaySignUp, resLastSignUp, resLogin, loadRes, getResType, getCategories, getResNewOrder, resAcceptOrder, resDashCharts, resCancelOrder, getResOrderList, resLogout, resForgotPasswordToken, resResetPassLinkVerify, resResetPassByLink } = require('../controller/restaurant')
 const { isRestuAuth } = require('../middleware/userAuth')
 const router = express.Router()
 
@@ -8,6 +8,10 @@ router.route('/restaurant/login').post(resLogin)
 router.route('/restaurant/logout').get(isRestuAuth, resLogout)
 router.route('/restaurant/fisrt/signup').post(resFirstSignUp)
 router.route('/restaurant/restuemail/verify').post(isRestuAuth, resEmailVerify)
+
+router.route('/restaurant/forgot/pass/token').post(resForgotPasswordToken)
+router.route('/restaurant/reset/pass/link/verify').post(resResetPassLinkVerify)
+router.route('/restaurant/reset/pass/bylink').post(resResetPassByLink)
 
 
 router.route('/restaurant/resphone/makeotp').post(isRestuAuth, resPhoneMakeOtp)

@@ -1,5 +1,5 @@
 const express = require('express')
-const { dbFirstSignUp, dbEmailVerify, dbPhoneMakeOtp, dbPhoneVerify, dbPrimarySignUp, loadDb, dbLastSignUp, dbLogin, getDbNewOrders, dbUpdateLiveLocation, dbAcceptOrder, dbMyActiveOrder, dbUpdateResStatus, dbActiveDeactive, dbDeliverdOrder, dbDashCharts, dbLogout } = require('../controller/delBoy')
+const { dbFirstSignUp, dbEmailVerify, dbPhoneMakeOtp, dbPhoneVerify, dbPrimarySignUp, loadDb, dbLastSignUp, dbLogin, getDbNewOrders, dbUpdateLiveLocation, dbAcceptOrder, dbMyActiveOrder, dbUpdateResStatus, dbActiveDeactive, dbDeliverdOrder, dbDashCharts, dbLogout, dbForgotPasswordToken, dbResetPassLinkVerify, dbResetPassByLink } = require('../controller/delBoy')
 const { isDbAuth } = require('../middleware/userAuth')
 const router = express.Router()
 
@@ -14,6 +14,10 @@ router.route('/delboy/dbphone/verify').post(isDbAuth, dbPhoneVerify)
 
 router.route('/delBoy/primary/signup').post(isDbAuth, dbPrimarySignUp)
 router.route('/delBoy/last/signup').post(isDbAuth, dbLastSignUp)
+
+router.route('/delBoy/forgot/pass/token').post(dbForgotPasswordToken)
+router.route('/delBoy/reset/pass/link/verify').post(dbResetPassLinkVerify)
+router.route('/delBoy/reset/pass/bylink').post(dbResetPassByLink)
 
 router.route('/delBoy/active/deactive').get(isDbAuth, dbActiveDeactive)
 router.route('/delBoy/update/location').post(isDbAuth, dbUpdateLiveLocation)
