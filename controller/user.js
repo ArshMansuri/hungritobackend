@@ -2,10 +2,12 @@ const Restaurant = require("../model/Restaurant");
 const User = require("../model/User");
 const Food = require("../model/Food");
 const { sendOtp } = require("../utils/sendOtp");
+const { sendMail } = require("../utils/sendMail");
 const cloudinary = require("cloudinary");
 const Order = require("../model/Order");
 const Filter = require("../model/Filter");
 const Admin = require("../model/Admin");
+const crypto = require("crypto")
 
 exports.userSignUp = async (req, res) => {
   try {
@@ -19,9 +21,13 @@ exports.userSignUp = async (req, res) => {
 
     let user = await User.findOne({ "phone.phone": phone });
     if (user) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Already Used Phone Number" });
+      if(user.phone.isVerify === true){
+        return res
+          .status(400)
+          .json({ success: false, message: "Already Used Phone Number" });
+        } else {
+        await User.findOneAndDelete({ "phone.phone": phone })
+      }
     }
 
     otp = Math.floor(Math.random() * 9000) + 1000;
@@ -86,6 +92,7 @@ exports.userLogin = async (req, res) => {
   try {
     const { phone, password, notiToken } = req.body;
 
+    let tempNotiToken = notiToken
     if (!phone || !password) {
       return res
         .status(400)
@@ -115,10 +122,10 @@ exports.userLogin = async (req, res) => {
     sendUser.password = "";
 
     if(!notiToken){
-      notiToken = "not allow"
+      tempNotiToken = "not allow"
     }
     let tempUser = await User.findById(user._id)
-    tempUser.notiToken = notiToken
+    tempUser.notiToken = tempNotiToken
     await tempUser.save()
 
     return res
@@ -217,6 +224,91 @@ exports.loadUser = async (req, res) => {
     const user = await User.findById(req.user._id);
 
     return res.status(200).json({ success: true, user });
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.forgotPasswordToken = async (req, res) => {
+  try {
+
+    const {phone} = req.body;
+
+    if (!phone) {
+      return res.status(400).json({ message: "Enter Phone" });
+    }    
+
+    const user = await User.findOne({"phone.phone": phone, "phone.isVerify": true});
+    if(!user){
+      return res.status(400).json({ message: "Invalid Phone Number" });
+    }
+
+    const resetToken = await user.createForgotPassToken()
+
+    // const subject = "HungriTo Forgot Password"
+
+    const text = `HungriTo Forgot Password Link, \n Link: https://hungrito-food.web.app/user/reset/password/link/${resetToken} \nif you don't send request for change password then ignore this`
+    sendOtp("9574478944", text)    
+
+    await user.save()
+    return res.status(200).json({ success: true, message: "Link Send Successfully" });
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.resetPassLinkVerify = async (req, res) => {
+  try {
+
+    const {forgotPassToken} = req.body;
+
+    if (!forgotPassToken) {
+      return res.status(400).json({ message: "Not Have Token Or Password" });
+    }    
+
+    const tempToken = crypto.createHash("sha256").update(forgotPassToken).digest("hex")
+    const user = await User.findOne({"forgotPassToken": tempToken, "forgotPassExpired": {$gt: Date.now()} ,"phone.isVerify": true})
+    if(!user){
+      return res.status(400).json({ message: "Invalid Details Or Link Expired" });
+    }
+
+    return res.status(200).json({ success: true, message: "Link Is Correct" });
+  } catch (error) {
+    console.log("Catch Error:: ", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+exports.resetPassByLink = async (req, res) => {
+  try {
+
+    const {forgotPassToken, password} = req.body;
+
+    if (!forgotPassToken || !password) {
+      return res.status(400).json({ message: "Not Have Token Or Password" });
+    }    
+
+    const tempToken = crypto.createHash("sha256").update(forgotPassToken).digest("hex")
+    const user = await User.findOne({"forgotPassToken": tempToken, "forgotPassExpired": {$gt: Date.now()} ,"phone.isVerify": true})
+    if(!user){
+      return res.status(400).json({ message: "Invalid Details Or Link Expired" });
+    }
+
+    user.password = password
+    await user.save()
+
+    return res.status(200).json({ success: true, message: "Password Change Successfully" });
   } catch (error) {
     console.log("Catch Error:: ", error);
     return res.status(500).json({

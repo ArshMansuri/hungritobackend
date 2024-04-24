@@ -7,7 +7,8 @@ exports.sendOtp = async (phone,msg) => {
   client.messages
     .create({
       to: `${phone}`,
-      from: "+12028663231",
+      // from: "+12028663231",
+      from: "+12562035230",
       body: msg,
     })
     .then((message) => console.log(message.sid)).catch((e)=>{

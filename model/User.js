@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
+const crypto = require('crypto')
 
 const UserSchema = mongoose.Schema({
     username: {
@@ -102,6 +103,9 @@ const UserSchema = mongoose.Schema({
         default: false
     },
 
+    forgotPassToken: String,
+    forgotPassExpired: Date,
+
     creatdAt:{
         type: Date,
         default: Date.now
@@ -121,6 +125,13 @@ UserSchema.methods.matchPassword = async function(password){
 
 UserSchema.methods.CreateToken = async function(){
     return jwt.sign({_id: this._id},process.env.JWT)
+}
+
+UserSchema.methods.createForgotPassToken = function(){
+    const resetToken = crypto.randomBytes(32).toString("hex")
+    this.forgotPassToken = crypto.createHash('sha256').update(resetToken).digest('hex')
+    this.forgotPassExpired = Date.now() +  10 * 60 * 1000
+    return resetToken
 }
 
 UserSchema.index({"phone.otp_expired": 1}, {expireAfterSeconds: 0})

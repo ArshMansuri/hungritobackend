@@ -1,5 +1,5 @@
 const express = require('express')
-const { userLogin, userSignUp, userOtpVerify, loadUser, getNearestRes, getResFood, addToCart, removeFromCart, increaseQutOfCartFood, decreaseQutOfCartFood, getMyCartDetail, addOrRemoveFoodInSave, getMySaveFoods, getMyOrderHistory, getMyActiveOrder, getAllFilters, getSearchNearestRes, getSearcDishhNearestRes, userCancelOrder, userLogout,  } = require('../controller/user')
+const { userLogin, userSignUp, userOtpVerify, loadUser, getNearestRes, getResFood, addToCart, removeFromCart, increaseQutOfCartFood, decreaseQutOfCartFood, getMyCartDetail, addOrRemoveFoodInSave, getMySaveFoods, getMyOrderHistory, getMyActiveOrder, getAllFilters, getSearchNearestRes, getSearcDishhNearestRes, userCancelOrder, userLogout, forgotPasswordToken, resetPassByLink, resetPassLinkVerify,  } = require('../controller/user')
 const { isUserAuth } = require('../middleware/userAuth.js')
 const router = express.Router()
 
@@ -8,6 +8,9 @@ router.route('/user/signUp/verify').post(userOtpVerify)
 router.route('/user/login').post(userLogin)
 router.route('/user/logout').get(isUserAuth, userLogout)
 router.route('/user/me').get(isUserAuth, loadUser)
+router.route('/user/forgot/pass/token').post(forgotPasswordToken)
+router.route('/user/reset/pass/link/verify').post(resetPassLinkVerify)
+router.route('/user/reset/pass/bylink').post(resetPassByLink)
 
 router.route('/user/order/cancel/:ordId').delete(isUserAuth, userCancelOrder)
 
