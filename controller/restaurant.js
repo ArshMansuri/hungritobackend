@@ -119,7 +119,7 @@ exports.resPhoneMakeOtp = async (req, res) => {
     restu.resPhone.otp = otp;
     restu.resPhone.isVerify = false;
     const msg = `Your HungriTo OTP Is ${otp}`;
-    sendOtp(phone, msg);
+    // sendOtp(phone, msg);
     await restu.save();
 
     const sendRes = { phone: phone, isVerify: false };
@@ -176,7 +176,7 @@ exports.resOwnerPhoneMakeOtp = async (req, res) => {
     restu.resOwnerPhone.otp = otp;
     restu.resOwnerPhone.isVerify = false;
     const msg = `Your HungriTo OTP Is ${otp}`;
-    sendOtp(phone, msg);
+    // sendOtp(phone, msg);
     await restu.save();
 
     const sendRes = { phone: phone, isVerify: false };
@@ -432,7 +432,7 @@ exports.resLogin = async (req, res) => {
       });
     }
 
-    if (restu.isVerify === false) {
+    if (restu.isVerify === false || restu.active === false) {
       return res.status(400).json({
         success: false,
         message: "Invalide Details",
@@ -948,6 +948,7 @@ exports.resDashCharts = async (req, res) => {
       },
     });
 
+
     const totalFood = await Food.find({
       foodRestaurant: req.restu._id,
       isDelete: false,
@@ -957,8 +958,12 @@ exports.resDashCharts = async (req, res) => {
       foodRestaurant: req.restu._id,
       isDelete: false,
       creatdAt: {
-        $gt: today,
-        $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
+        $gt:  new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate()
+        ).setHours(0,0,0),
+        $lt: today,
       },
     });
 
@@ -967,7 +972,11 @@ exports.resDashCharts = async (req, res) => {
       isDelete: false,
       creatdAt: {
         $gt: previousDate,
-        $lt: today,
+        $lt: new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate()
+        ).setHours(0,0,0),
       },
     });
 
