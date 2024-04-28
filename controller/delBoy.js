@@ -407,7 +407,7 @@ exports.dbForgotPasswordToken = async (req, res) => {
 
     const subject = "HungriTo Forgot Password"
 
-    const text = `HungriTo Forgot Password Link, \n Link: https://hungrito-food.web.app/delboy/reset/password/link/${resetToken} \nif you don't send request for change password then ignore this`
+    const text = `HungriTo Forgot Password Link, \n Link: https://hungrito-food.web.app/db/reset/password/link/${resetToken} \nif you don't send request for change password then ignore this`
     sendMail(email, subject, text)    
 
     await delBoy.save()
