@@ -119,7 +119,7 @@ exports.resPhoneMakeOtp = async (req, res) => {
     restu.resPhone.otp = otp;
     restu.resPhone.isVerify = false;
     const msg = `Your HungriTo OTP Is ${otp}`;
-    // sendOtp(phone, msg);
+    sendOtp(phone, msg);
     await restu.save();
 
     const sendRes = { phone: phone, isVerify: false };
@@ -176,7 +176,7 @@ exports.resOwnerPhoneMakeOtp = async (req, res) => {
     restu.resOwnerPhone.otp = otp;
     restu.resOwnerPhone.isVerify = false;
     const msg = `Your HungriTo OTP Is ${otp}`;
-    // sendOtp(phone, msg);
+    sendOtp(phone, msg);
     await restu.save();
 
     const sendRes = { phone: phone, isVerify: false };
